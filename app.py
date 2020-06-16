@@ -29,8 +29,9 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server
 
-
+#filters component
 filters = dbc.Card([
+    html.Div([
         dcc.Slider(
         id = 'date_slider',
         min = 0,
@@ -43,8 +44,8 @@ filters = dbc.Card([
             {'label': 'Nombre de mort', 'value': 'Death'},
             {'label': 'Nombre de cas', 'value': 'Confirmed'}],
         value='Confirmed'),
-
-])
+    ], style={'width':'100%', 'height':'100%'})
+], className='h-75 p-4 mt-4')
 
 
 
@@ -54,46 +55,50 @@ filters = dbc.Card([
 app.layout = dbc.Container(
     [
     
-            
-        html.H1(id='my_title', children='Evolution du COVID-19 à travers le monde', style={'color': 'red'}), 
+        dbc.Card(dbc.Row([
+            dbc.Col(html.H1(id='my_title', children='Evolution du COVID-19 à travers le monde'),md=8), 
+            dbc.Col(html.H2(id='my_date'), md=4, className='text-right'),
+        ],className='d-flex justify-content-between h-75'), className=' p-3'),
+        
         dbc.Row([
-            dbc.Col(dbc.Card(html.H2(id='my_date', style={'width':'200px', 'height':'200px' })), sm= 12, md= 3, className="p-4"), 
-            dbc.Col(dbc.Card(html.H2(id='confirmed_count', style={'width':'200px', 'height':'200px'})), sm= 12,md= 3, className="p-4"),
-            dbc.Col(dbc.Card(html.H2(id='death_count', style={'width':'200px', 'height':'200px'})), sm= 12,md= 3, className="p-4"),
-        ]),
+            dbc.Col(dbc.Card(html.H2(id='confirmed_count', style={'width':'200px', 'height':'140px'})), sm= 12,md= 3, className="p-4"),
+            dbc.Col(dbc.Card(html.H2(id='death_count', style={'width':'200px', 'height':'140px'})), sm= 12,md= 3, className="p-4"),
+#Filters            
+            dbc.Col(filters, md=6,className="mx-auto")
+        ], className='h-50'),
       
         html.Hr(),
     
         # Filters
-        dbc.Row([
-            dbc.Col(filters, md=6,className="mx-auto")
-        ], align='center'),
-
+     
 # Figures
-    
+    #Map & total_case_plot & new_cases
         dbc.Row([
-            dbc.Col(dbc.Card(dcc.Graph(id ='map_plot', style={'margin':'auto'})), sm=12, md=6, className="mx-auto"), 
-            dbc.Col(dcc.Graph(id='total_case_plot',style={'width':'100%'}), sm=12, md=12),
-                ]), 
+            dbc.Col(dbc.Card(dcc.Graph(id ='map_plot', style={'padding':'3.9rem 3rem'})), sm=12, md=6), 
+            dbc.Col([
+                dbc.Card(dcc.Graph(id='total_case_plot',style={'height':'50%'})), 
+                dbc.Card(dcc.Graph(id='new_cases'), className='mt-4')
+            ],sm=12, md=6),
+                ], className='m-4'), 
+    #TOP 10 + Dash Table
         dbc.Row([
-            dbc.Col(dcc.Graph(id='new_cases'), sm=12, md=6),
-            dbc.Col(dcc.Graph(id='top10'), sm=12, md=6),
+            dbc.Col(dbc.Card(dcc.Graph(id='top10')),sm=12, md=12, className="mt-4"),
         ]),
     
 
 # Detailed vizu
-    dbc.Row([
-        dbc.Col(html.Div([ html.H1(children='Exploration par pays')]), className='text-center mb-4'),
-    ]),
-    dbc.Row([
-        dbc.Col( dcc.Dropdown(
-        id = 'detailed_dropdown',
-        options = [{'label': country, 'value': country} for country in df['Province/State'].unique()],
-        multi = False,
-        value = 'Reunion'), md=2, className='mx-auto')
-    ]),
+#     dbc.Row([
+#         dbc.Col(html.Div([ html.H1(children='Exploration par pays')]), className='text-center mb-4'),
+#     ]),
+#     dbc.Row([
+#         dbc.Col( dcc.Dropdown(
+#         id = 'detailed_dropdown',
+#         options = [{'label': country, 'value': country} for country in df['Province/State'].unique()],
+#         multi = False,
+#         value = 'Reunion'), md=2, className='mx-auto')
+#     ]),
     
-   dcc.Graph(id='detailed_graph')
+#    dcc.Graph(id='detailed_graph')
   
 
    
@@ -107,15 +112,16 @@ app.layout = dbc.Container(
     Output('map_plot', 'figure'),
     Output('total_case_plot','figure'),
     Output('new_cases', 'figure'),
-    Output('top10', 'figure'),
-    Output('detailed_graph','figure')],
+    Output('top10', 'figure')],
+    # Output('detailed_graph','figure')
+   
 
     [Input('date_slider', 'value'),
-    Input('dropdown', 'value'),
-    Input('detailed_dropdown','value')]
-    )
-
-def global_update(slider_date, dropdown_type, detailed_dropdown):
+    Input('dropdown', 'value'),])
+    # Input('detailed_dropdown','value')])
+    
+# detailed_dropdown
+def global_update(slider_date, dropdown_type):
 
 # 0. Preparation
 
@@ -142,7 +148,7 @@ def global_update(slider_date, dropdown_type, detailed_dropdown):
                             zoom = 0.4, #mapbox_style='dark',
                             size = 'Confirmed', size_max = 20,
                             #color = 'color', color_continuous_scale = ['Gold', 'DarkOrange', 'Crimson'],
-                            width = 900, height = 800)
+                            width = 800, height = 800)
 
     map_plot.update_layout(hoverlabel=dict(bgcolor="white",font_size=12))
     map_plot.update(layout_coloraxis_showscale=True)
@@ -182,14 +188,14 @@ def global_update(slider_date, dropdown_type, detailed_dropdown):
     top10_plot.update_xaxes(title=None, showgrid=False, showticklabels=False)
 
 # 5. Data per country
-    cases_per_country = diff[diff['Province/State'] == detailed_dropdown]
-    tooltip = {column:False for column in cases_per_country}
-    tooltip[dropdown_type] = True
-    cases_per_country_plot = px.bar(cases_per_country, x='Date',y=dropdown_type,
-                        title= '{} - {}'.format(detailed_dropdown, dropdown_type), hover_data=tooltip)
-    cases_per_country_plot.update_yaxes(title=None)
-    cases_per_country_plot.update_xaxes(title=None)
-    cases_per_country_plot.update_layout(hovermode="x unified")
+    # cases_per_country = diff[diff['Province/State'] == detailed_dropdown]
+    # tooltip = {column:False for column in cases_per_country}
+    # tooltip[dropdown_type] = True
+    # cases_per_country_plot = px.bar(cases_per_country, x='Date',y=dropdown_type,
+    #                     title= '{} - {}'.format(detailed_dropdown, dropdown_type), hover_data=tooltip)
+    # cases_per_country_plot.update_yaxes(title=None)
+    # cases_per_country_plot.update_xaxes(title=None)
+    # cases_per_country_plot.update_layout(hovermode="x unified")
 
 # Output
     output_tuple = (
@@ -200,7 +206,7 @@ def global_update(slider_date, dropdown_type, detailed_dropdown):
         total_case,
         new_cases_plot,
         top10_plot,
-        cases_per_country_plot
+        # cases_per_country_plot
         )
     return output_tuple   
 
