@@ -7,10 +7,13 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 import dash
+import dash_table
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Output,Input
+
+
 
 df = pd.read_csv('database.csv')
 df.drop(columns=['Country/Region','Recovered'], inplace=True)
@@ -44,11 +47,27 @@ filters = dbc.Card([
             {'label': 'Nombre de mort', 'value': 'Death'},
             {'label': 'Nombre de cas', 'value': 'Confirmed'}],
         value='Confirmed'),
-    ], style={'width':'100%', 'height':'100%'})
-], className='h-75 p-4 mt-4')
+    ], style={'width':'100%', 'height':'100%','padding':'.9rem'})
+], className='h-75 p-1 mt-3')
+
+# test Dash-table
+dashTable = dash_table.DataTable(
+    id='table',
+    columns=[{"name": i, "id": i} for i in df.columns],
+    data=df.to_dict('records'),
+    page_size=10,
+    style_table={'height': 340, 'width': '80%','margin':' 2rem auto'} 
+)
 
 
+# colorized title
+titleSpanRed = html.Span(children='COVID-19', style={'color':'red'}) 
 
+# death colorized
+deathCount = html.Span(id='death_count', style={'color':'red'})
+
+#confirmed_count colorized
+confirmedCount = html.Span(id='confirmed_count', style={'color':'red'})
 
 # app = app.server
 # Headers
@@ -56,16 +75,16 @@ app.layout = dbc.Container(
     [
     
         dbc.Card(dbc.Row([
-            dbc.Col(html.H1(id='my_title', children='Evolution du COVID-19 à travers le monde'),md=8), 
+            dbc.Col(html.H1(id='my_title', children=['Evolution du ', titleSpanRed, ' à travers le monde']),md=8), 
             dbc.Col(html.H2(id='my_date'), md=4, className='text-right'),
-        ],className='d-flex justify-content-between h-75'), className=' p-3'),
+        ],className='d-flex justify-content-between h-75'), className=' p-3 my-3'),
         
         dbc.Row([
-            dbc.Col(dbc.Card(html.H2(id='confirmed_count', style={'width':'200px', 'height':'140px'})), sm= 12,md= 3, className="p-4"),
-            dbc.Col(dbc.Card(html.H2(id='death_count', style={'width':'200px', 'height':'140px'})), sm= 12,md= 3, className="p-4"),
+            dbc.Col(html.Div(html.H2(children=[confirmedCount, 'cas'], style={'width':'100%', 'height':'140px', 'display':'flex', 'flex-direction':'column','font-size':'3rem','align-items':'center', 'border':'1px solid rgba(0,0,0,.125)','padding': '0 5rem','border-radius':'.25rem'})), sm= 12,md= 3, className="p-3"),
+            dbc.Col(html.Div(html.H2(children=[deathCount, 'morts'], style={'width':'100%', 'height':'140px', 'display':'flex', 'flex-direction':'column','font-size':'3rem','align-items':'center','border':'1px solid rgba(0,0,0,.125)', 'padding': '0 5rem','border-radius':'.25rem'})), sm= 12,md= 3, className="p-3"),
 #Filters            
             dbc.Col(filters, md=6,className="mx-auto")
-        ], className='h-50'),
+        ], className='h-50 p-1 mb-2'),
       
         html.Hr(),
     
@@ -74,16 +93,17 @@ app.layout = dbc.Container(
 # Figures
     #Map & total_case_plot & new_cases
         dbc.Row([
-            dbc.Col(dbc.Card(dcc.Graph(id ='map_plot', style={'padding':'3.9rem 3rem'})), sm=12, md=6), 
+            dbc.Col(dbc.Card(dcc.Graph(id ='map_plot', style={'padding':'3.9rem 3rem'})), sm=12, md=7, className='py-2'), 
             dbc.Col([
-                dbc.Card(dcc.Graph(id='total_case_plot',style={'height':'50%'})), 
+                dbc.Card(dcc.Graph(id='total_case_plot',style={'height':'50%'}), className='mt-2'), 
                 dbc.Card(dcc.Graph(id='new_cases'), className='mt-4')
-            ],sm=12, md=6),
-                ], className='m-4'), 
+            ],sm=12, md=5),
+                ], className='p-3'), 
     #TOP 10 + Dash Table
         dbc.Row([
-            dbc.Col(dbc.Card(dcc.Graph(id='top10')),sm=12, md=12, className="mt-4"),
-        ]),
+            dbc.Col(dbc.Card(dcc.Graph(id='top10', style={'padding':'0.1rem'})),sm=12, md=7, className="ml-2 mt-2 mb-4 px-2"),
+            dbc.Col(dbc.Card(dashTable),className='mt-2 mb-4')
+        ], className='p-3'),
     
 
 # Detailed vizu
@@ -148,7 +168,7 @@ def global_update(slider_date, dropdown_type):
                             zoom = 0.4, #mapbox_style='dark',
                             size = 'Confirmed', size_max = 20,
                             #color = 'color', color_continuous_scale = ['Gold', 'DarkOrange', 'Crimson'],
-                            width = 800, height = 800)
+                            width = 990, height = 800)
 
     map_plot.update_layout(hoverlabel=dict(bgcolor="white",font_size=12))
     map_plot.update(layout_coloraxis_showscale=True)
@@ -197,11 +217,14 @@ def global_update(slider_date, dropdown_type):
     # cases_per_country_plot.update_xaxes(title=None)
     # cases_per_country_plot.update_layout(hovermode="x unified")
 
+
+
+
 # Output
     output_tuple = (
-        ' Date - {}'.format(df['Date'][slider_date]),
-        'Nombre de cas {}'.format(confirmed_count),
-        'Nombre de morts {}'.format(death_count),
+        'Date - {}'.format(df['Date'][slider_date]),
+        '{}'.format(confirmed_count),
+        '{}'.format(death_count),
         map_plot,
         total_case,
         new_cases_plot,
