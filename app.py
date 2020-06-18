@@ -28,9 +28,11 @@ mapbox_access_token = lines[0]
 
 
 # added Bootstrap CSS.
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server
+
+
 
 #filters component
 filters = dbc.Card([
@@ -49,6 +51,8 @@ filters = dbc.Card([
         value='Confirmed'),
     ], style={'width':'100%', 'height':'100%','padding':'.9rem'})
 ], className='h-75 p-1 mt-3')
+
+
 
 # test Dash-table
 dashTable = dash_table.DataTable(
@@ -70,18 +74,20 @@ deathCount = html.Span(id='death_count', style={'color':'red'})
 confirmedCount = html.Span(id='confirmed_count', style={'color':'red'})
 
 # app = app.server
-# Headers
-app.layout = dbc.Container(
-    [
+
+app.layout = html.Div([
     
+    dbc.Container(
+    [   
+    # Headers
         dbc.Card(dbc.Row([
             dbc.Col(html.H1(id='my_title', children=['Evolution du ', titleSpanRed, ' à travers le monde']),md=8), 
             dbc.Col(html.H2(id='my_date'), md=4, className='text-right'),
         ],className='d-flex justify-content-between h-75'), className=' p-3 my-3'),
         
         dbc.Row([
-            dbc.Col(html.Div(html.H2(children=[confirmedCount, 'cas'], style={'width':'100%', 'height':'140px', 'display':'flex', 'flex-direction':'column','font-size':'3rem','align-items':'center', 'border':'1px solid rgba(0,0,0,.125)','padding': '0 5rem','border-radius':'.25rem'})), sm= 12,md= 3, className="p-3"),
-            dbc.Col(html.Div(html.H2(children=[deathCount, 'morts'], style={'width':'100%', 'height':'140px', 'display':'flex', 'flex-direction':'column','font-size':'3rem','align-items':'center','border':'1px solid rgba(0,0,0,.125)', 'padding': '0 5rem','border-radius':'.25rem'})), sm= 12,md= 3, className="p-3"),
+            dbc.Col(html.Div(html.H2(children=[confirmedCount, 'cas'], className='confirmed-count')), sm= 12,md= 3, className="p-3"),
+            dbc.Col(html.Div(html.H2(children=[deathCount, 'morts'], className='death-count')), sm= 12,md= 3, className="p-3"),
 #Filters            
             dbc.Col(filters, md=6,className="mx-auto")
         ], className='h-50 p-1 mb-2'),
@@ -101,8 +107,8 @@ app.layout = dbc.Container(
                 ], className='p-3'), 
     #TOP 10 + Dash Table
         dbc.Row([
-            dbc.Col(dbc.Card(dcc.Graph(id='top10', style={'padding':'0.1rem'})),sm=12, md=7, className="ml-2 mt-2 mb-4 px-2"),
-            dbc.Col(dbc.Card(dashTable),className='mt-2 mb-4')
+            dbc.Col(dbc.Card(dcc.Graph(id='top10', className='top-10-graph'),className="top-10-card"),sm=12, md=7),
+            dbc.Col(dbc.Card(dashTable, className='dash-table-card'))
         ], className='p-3'),
     
 
@@ -121,9 +127,13 @@ app.layout = dbc.Container(
 #    dcc.Graph(id='detailed_graph')
   
 
-   
 
-], fluid=True)
+
+], fluid=True),
+
+# Footer
+    html.Footer(children=[html.P(children='©️2020 Agensit')],className='footer')
+ ])
 
 @app.callback(
     [Output('my_date', 'children'), 
