@@ -3,44 +3,97 @@ body{
 }
 
 
-
-.confirmed-count{
-    background: #fff;
-    width:100%; 
-    height : 140px; 
-    display:flex; 
-    flex-direction:column;
-    font-size:3rem;
-    align-items:center; 
-    border: 1px solid rgba(0,0,0,.125);
-    padding: 0 5rem;
-    border-radius:.25rem;
+.header{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-.death-count{
+
+.header-date{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+    
+
+.confirmed-case::after{
+    display: flex;
+    justify-content: center;
+    content: 'cas confirmés';
+    color: black
+}
+
+.count-card{
     background: #fff;
     width:100%; 
     height : 140px; 
     display:flex; 
     flex-direction:column;
-    font-size:3rem;
+    font-size:2.1rem;
     align-items:center; 
     border: 1px solid rgba(0,0,0,.125);
     padding: 0 5rem;
     border-radius:.25rem;
-}    
+    margin: 0 0.60rem
+} 
+
+.count-selected{
+    color: red!important;
+}
+
+.confirmed-death::after{
+    display: flex;
+    justify-content: center;
+    content: 'morts confirmés';
+    color: black
+}
+
+.filter-card{
+    height: 140px;
+}
+.country-dropdown-el{
+    margin-top: 1.6rem;
+}
 
 
+
+.map-plot{
+    height: 450px;
+    border: none !important;
+    margin: 0 auto;
+    
+}
+
+.total-case-new-cases{
+    border: none !important;
+    padding-left: 5rem;
+
+}
+
+.map-graph-row{
+    border: none!important;
+    margin-bottom: 2rem;
+}
 
 .top-10-card{
     padding-right: 0.6rem;
     padding-left: 0.6rem;
     padding-bottom: 0.rem;
- 
-    
+}
+
+.three-el-card{
+    margin-left: 0;
 }
 
 .top-10-graph{
-    width: 100%
+    margin-top: 2.5rem;
+    width: 100%;
+}
+
+.new-cases{
+    margin-top: 2.5rem;
 }
 
 
@@ -52,3 +105,6 @@ body{
     width: 100%;
     height: 6vh;
 }
+
+
+/*media queries*/
