@@ -31,7 +31,7 @@ body{
     height : 140px; 
     display:flex; 
     flex-direction:column;
-    font-size:2.1rem;
+    font-size:1.65em;
     align-items:center; 
     border: 1px solid rgba(0,0,0,.125);
     padding: 0 5rem;
@@ -66,6 +66,10 @@ body{
     
 }
 
+.map-top10-row {
+    width: 100%;
+}
+
 .total-case-new-cases{
     border: none !important;
     padding-left: 5rem;
@@ -77,23 +81,23 @@ body{
     margin-bottom: 2rem;
 }
 
-.top-10-card{
-    padding-right: 0.6rem;
-    padding-left: 0.6rem;
-    padding-bottom: 0.rem;
-}
 
-.three-el-card{
-    margin-left: 0;
+.map{
+    margin-top:2.5rem;
 }
 
 .top-10-graph{
-    margin-top: 2.5rem;
+    margin-top:2.5rem ;
     width: 100%;
 }
 
 .new-cases{
     margin-top: 2.5rem;
+}
+
+.total_case_plot{
+    width: 100%;
+    margin-top:2.5rem;
 }
 
 
@@ -108,3 +112,14 @@ body{
 
 
 /*media queries*/
+
+
+@media screen and (max-width: 1024px) {
+
+    #map-plot{
+        width: 90%;
+    }
+    #top10{
+        width: 100%;
+    }
+  }

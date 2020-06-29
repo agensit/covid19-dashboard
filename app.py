@@ -102,7 +102,7 @@ app.layout = html.Div([
             [html.Div(children=[
                 dbc.Col(html.H1(id='my_title', children=['Evolution du ', titleSpanRed, ' à travers le monde']),sm=12, md=8), 
                 dbc.Col(html.H2(id='my_date',className='header-date'),sm=12, md=4),
-            ],className='header')
+            ],className='header d-flex')
             ]
             ,className='d-flex justify-content-between h-75 align-items-center'), className=' p-3 my-3'),
 #Tabs
@@ -112,11 +112,11 @@ app.layout = html.Div([
              dcc.Tabs(id="tabs", value='Confirmed', children=[
              dcc.Tab(id='tab_conf',label='{} Cas'.format(confirmed_count), value='Confirmed', style={'color':'red'},className='count-card confirmed-case', selected_className='count-selected'),
              dcc.Tab(id='tab_death',label='{} Morts'.format(death_count), value='Death', style={'color':'red'}, className='count-card confirmed-death', selected_className='count-selected'),
-             ])),
+             ]),className='p-0'),
             # dbc.Col(html.Div(html.H2(id='tab-conf', children=[confirmed_count, 'cas'], className='confirmed-count')), sm= 12,md= 3, className="p-3"),
             # dbc.Col(html.Div(html.H2(id='tab_death',children=[death_count, 'morts'], className='death-count')), sm= 12,md= 3, className="p-3"),
 #Filters            
-            dbc.Col(filters, md=6,className="mx-auto")
+            dbc.Col(filters, md=6, sm=12 ,className="ml-1")
         ], className='h-50 p-1 mb-2'),
       
         html.Hr(),
@@ -126,14 +126,14 @@ app.layout = html.Div([
 # Figures
     #Map & total_case_plot & new_cases
         dbc.Row([
-                dbc.Col([
-                    dcc.Graph(id ='map_plot', className='map'),
-                    dcc.Graph(id='top10', className='top-10-graph')
-                ]), 
-                dbc.Col([
-                    dcc.Graph(id='total_case_plot'),
-                    dcc.Graph(id='new_cases', className='new-cases'),
-                ]),
+                dbc.Row([
+                    dbc.Col(dcc.Graph(id ='map_plot', className='map'),lg=6),
+                    dbc.Col(dcc.Graph(id='top10', className='top-10-graph'),lg=6)
+                ],className='map-top10-row mx-auto'),
+                dbc.Row([
+                    dbc.Col(dcc.Graph(id='total_case_plot', className='total_case_plot'), lg=6),
+                    dbc.Col(dcc.Graph(id='new_cases', className='new-cases'), lg=6),
+                ],className='map-top10-row mx-auto'),
             ],className='px-3 map-graph-row'), 
     #TOP 10 + Dash Table
    
