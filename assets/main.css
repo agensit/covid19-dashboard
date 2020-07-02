@@ -21,7 +21,7 @@ body{
 .confirmed-case::after{
     display: flex;
     justify-content: center;
-    content: 'cas confirmés';
+    content: 'cas';
     color: black
 }
 
@@ -46,7 +46,7 @@ body{
 .confirmed-death::after{
     display: flex;
     justify-content: center;
-    content: 'morts confirmés';
+    content: 'morts';
     color: black
 }
 

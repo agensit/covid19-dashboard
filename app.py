@@ -13,7 +13,6 @@ import dash_html_components as html
 from dash.dependencies import Output,Input
 
 
-
 df = pd.read_csv('databasefr.csv')
 df.drop(columns=['Country/Region','Recovered', 'Province/State'], inplace=True)
 
@@ -21,7 +20,6 @@ df.drop(columns=['Country/Region','Recovered', 'Province/State'], inplace=True)
 last_date = df['Date'].max()
 confirmed_count = df[df['Date'] == last_date]['Confirmed'].sum()
 death_count = df[df['Date'] == last_date]['Death'].sum() 
-
 
 # discretization 
 def discretize(serie, buckets):
@@ -38,17 +36,12 @@ def millify(n):
         return f'{round(n/1e3,1)}K'
     return n
 
-
-
 # set the date to french format
 import locale
 locale.setlocale(locale.LC_TIME, "fr_FR")
 def pretty_date(str_date):
     date = parse(str_date)
     return date.strftime('%d %B %Y')
-
-
-
 
 # mapbox token acess
 with open('mapbox_token.txt') as f:
@@ -85,7 +78,7 @@ filters = dbc.Card([
 
 
 # colorized title
-titleSpanRed = html.Span(children='COVID-19', style={'color':'red'}) 
+titleSpanRed = html.Span(children='COVID-19', style={'color':'red'}) # TODO: make it bigger 
 
 # death colorized
 
@@ -93,89 +86,125 @@ titleSpanRed = html.Span(children='COVID-19', style={'color':'red'})
 
 # app = app.server
 
-app.layout = html.Div([
-    
-    dbc.Container(
-    [   
-    # Headers
-        dbc.Card(dbc.Row(
-            [html.Div(children=[
-                dbc.Col(html.H1(id='my_title', children=['Evolution du ', titleSpanRed, ' à travers le monde']),sm=12, md=8), 
-                dbc.Col(html.H2(id='my_date',className='header-date'),sm=12, md=4),
-            ],className='header d-flex')
-            ]
-            ,className='d-flex justify-content-between h-75 align-items-center'), className=' p-3 my-3'),
-#Tabs
-        html.Hr(),
-        dbc.Row([
-             dbc.Col( 
-             dcc.Tabs(id="tabs", value='Confirmed', children=[
-             dcc.Tab(id='tab_conf',label='{} Cas'.format(confirmed_count), value='Confirmed', style={'color':'red'},className='count-card confirmed-case', selected_className='count-selected'),
-             dcc.Tab(id='tab_death',label='{} Morts'.format(death_count), value='Death', style={'color':'red'}, className='count-card confirmed-death', selected_className='count-selected'),
-             ]),className='p-0'),
-            # dbc.Col(html.Div(html.H2(id='tab-conf', children=[confirmed_count, 'cas'], className='confirmed-count')), sm= 12,md= 3, className="p-3"),
-            # dbc.Col(html.Div(html.H2(id='tab_death',children=[death_count, 'morts'], className='death-count')), sm= 12,md= 3, className="p-3"),
-#Filters            
-            dbc.Col(filters, md=6, sm=12 ,className="ml-1")
-        ], className='h-50 p-1 mb-2'),
-      
-        html.Hr(),
-    
-        # Filters
-     
-# Figures
-    #Map & total_case_plot & new_cases
-        dbc.Row([
-                dbc.Row([
-                    dbc.Col(dcc.Graph(id ='map_plot', className='map'),lg=6),
-                    dbc.Col(dcc.Graph(id='top10', className='top-10-graph'),lg=6)
-                ],className='map-top10-row mx-auto'),
-                dbc.Row([
-                    dbc.Col(dcc.Graph(id='total_case_plot', className='total_case_plot'), lg=6),
-                    dbc.Col(dcc.Graph(id='new_cases', className='new-cases'), lg=6),
-                ],className='map-top10-row mx-auto'),
-            ],className='px-3 map-graph-row'), 
-    #TOP 10 + Dash Table
-   
-    
+app.layout =html.Div(
+	[    
+	    dbc.Container(
+		    [   
+		        # Headers
+		        dbc.Card(
+		        	dbc.Row(
+		        		[
+		        		    html.Div(
+		        		    	children=[
+		                            dbc.Col(html.H1(id='my_title', children=['Evolution du ', titleSpanRed, ' à travers le monde']),sm=12, md=8), 
+		                            dbc.Col(html.H2(id='my_date',className='header-date'),sm=12, md=4)
+		                        ],
+		                        className='header d-flex'
+		                    )
+		        		],
+		        		className='d-flex justify-content-between h-75 align-items-center'
+		            ),
+		            className=' p-3 my-3'
+		        ),
 
-# Detailed vizu
-#     dbc.Row([
-#         dbc.Col(html.Div([ html.H1(children='Exploration par pays')]), className='text-center mb-4'),
-#     ]),
-#     dbc.Row([
-#         dbc.Col( dcc.Dropdown(
-#         id = 'detailed_dropdown',
-#         options = [{'label': country, 'value': country} for country in df['Province/State'].unique()],
-#         multi = False,
-#         value = 'Reunion'), md=2, className='mx-auto')
-#     ]),
-    
-#    dcc.Graph(id='detailed_graph')
-  
+		        #Tabs & Filters
+		        dbc.Row(
+		        	[ 
+		        	    dbc.Col(
+				         	dcc.Tabs(id="tabs", value='Confirmed', 
+				         		children=[
+				         		    dcc.Tab(id='tab_conf',label=f'{confirmed_count}', value='Confirmed', style={'color':'red'},
+				         		    	className='count-card confirmed-case', selected_className='count-selected'),
+				                    dcc.Tab(id='tab_death',label=f'{death_count}', value='Death', style={'color':'red'},
+				                    	className='count-card confirmed-death', selected_className='count-selected')
+				                ]
+				            ),
+				            className='p-0'
+				        ),
+		                dbc.Col(filters, md=6, sm=12 ,className="ml-1")
+		            ], 
+		            className='h-50 p-1 mb-2'
+		        ),
 
-
-
-], fluid=True),
-
-# Footer
-    html.Footer(children=[html.P(children='©️2020 Agensit')],className='footer')
- ])
+		        # Figures
+		        dbc.Row(
+		        	[
+		                dbc.Row(
+		                	[
+		                        # dbc.Col(
+		                        # 	dbc.Card(
+				                      #   		[
+				                      #   		    dbc.CardHeader("Propagation geograpique de la pandémie"),
+				                      #   		    dbc.CardBody(dcc.Graph(id='map_plot', className='map'))
+				                      #   		]
+		                        # 	),
+		                        # 	lg=6
+		                        # ),
+		                        dbc.Col(dcc.Graph(id='map_plot', className='map'),lg=6),
+		                        dbc.Col(
+		                        	dbc.Card(
+		                        		[
+		                        		    dbc.CardHeader('Pays les plus touchés'),
+		                        		    dbc.CardBody(dcc.Graph(id='top10', className='top-10-graph'))
+		                        		]
+		                        	),
+		                            lg=6
+		                       	)
+		                    ],
+		                    className='map-top10-row mx-auto'
+		                ),
+		                dbc.Row(
+		                	[	
+		                		dbc.Col(
+		                        	dbc.Card(
+		                        		[
+		                        		    dbc.CardHeader(children='Evolution du nombre de cas', id='total_case_title'),
+		                        		    dbc.CardBody(dcc.Graph(id='total_case_plot', className='total_case_plot'))
+		                        		]
+		                        	),
+		                            lg=6
+		                       	),
+		                		dbc.Col(
+		                        	dbc.Card(
+		                        		[
+		                        		    dbc.CardHeader(children='Nouveau cas', id='new_cases_title'),
+		                        		    dbc.CardBody(dcc.Graph(id='new_cases', className='new'))
+		                        		]
+		                        	),
+		                            lg=6
+		                       	)		                       	
+		                    ],
+		                    className='map-top10-row mx-auto'
+		                ),
+		            ],
+		            className='px-3 map-graph-row'
+		        ), 
+		    ], 
+	        fluid=True
+	    ),
+	    # Footer
+	    html.Footer(children=[html.P(children='©️2020 Agensit')],className='footer')
+    ]
+)
 
 @app.callback(
-    [Output('my_date', 'children'), 
-    Output('tab_conf', 'label'),
-    Output('tab_death', 'label'),
-    Output('map_plot', 'figure'),
-    Output('total_case_plot','figure'),
-    Output('new_cases', 'figure'),
-    Output('top10', 'figure'),
+    [
+        Output('my_date', 'children'), 
+        Output('tab_conf', 'label'),
+        Output('tab_death', 'label'),
+        Output('map_plot', 'figure'),
+        Output('total_case_plot','figure'),
+        Output('new_cases', 'figure'),
+        Output('top10', 'figure'),
+        Output('total_case_title','children'),
+        Output('new_cases_title','children')
     ],
-
-    [Input('date_slider', 'value'),
-    Input('tabs', 'value'),
-    Input('country_dropdown', 'value')
-    ])
+    [
+        Input('date_slider', 'value'),
+        Input('tabs', 'value'),
+        Input('country_dropdown', 'value')
+    ]
+)
     
 
 def global_update(slider_date, tabs_type, country_dropdown):
@@ -207,7 +236,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
     type_value = 'cas' if tabs_type == 'Confirmed' else 'morts'
 
 # 1. MAP
-
     if country_dropdown:
         map_plot = go.Figure([go.Scattermapbox(
 	        lat = filtred_df[filtred_df['State'] == country]['Lat'],
@@ -215,7 +243,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
 	        customdata = filtred_df[filtred_df['State'] == country]['State'],
 	        text = filtred_df[filtred_df['State'] == country][tabs_type].map(lambda x: millify(x)),
 	        marker = go.scattermapbox.Marker(size = filtred_df[filtred_df['State'] == country][f'disc_{tabs_type}'] + 4, sizemin = 4),
-	        hovertemplate = '<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>',
+	        hovertemplate = '<b>%{customdata}</b><br>' + '%{text}' + f'{type_value}' '<extra></extra>',
 	        name = country) 
 	        for country in country_dropdown])
     else:
@@ -230,9 +258,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
     map_plot.update_layout(hoverlabel=dict(bgcolor="white",font_size=12), margin=dict(l=0, r=0, t=0, b=0),
 	                       mapbox = {'accesstoken': mapbox_access_token, 'zoom': 0.4}, showlegend = False)
-
-
-    
 
  # 2. Cases over time 
     if country_dropdown:
@@ -251,7 +276,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
     total_case.update_yaxes(title=None)
     total_case.update_xaxes(title=None)
-    total_case.update_layout(hovermode="x unified", title=f'Evolution du nombre de {type_value}')
+    total_case.update_layout(hovermode="x unified", margin=dict(l=0, r=0, t=0, b=0))
 
 # 3. New Cases Over time
     new_type = 'new_cases' if tabs_type == 'Confirmed' else 'new_deaths' 
@@ -278,7 +303,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
     new_cases_plot.update_layout(barmode='stack')
     new_cases_plot.update_yaxes(title=None)
     new_cases_plot.update_xaxes(title=None)
-    new_cases_plot.update_layout(hovermode="x unified", title=f'Nouveau {type_value}', showlegend=False)
+    new_cases_plot.update_layout(hovermode="x unified", showlegend=False, margin=dict(l=0, r=0, t=0, b=0))
 
 # 4. Top 10
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()
@@ -303,21 +328,23 @@ def global_update(slider_date, tabs_type, country_dropdown):
             textposition = 'outside',
             orientation = 'h'))
 
-    top10_plot.update_layout(hoverlabel=dict(bgcolor="white",font_size=12), title='Pays les plus touchés', showlegend=False)
+    top10_plot.update_layout(hoverlabel=dict(bgcolor="white",font_size=12), showlegend=False, margin=dict(l=0, r=0, t=0, b=0))
     top10_plot.update_traces(texttemplate='%{text:.2s}', textposition='outside')
-    top10_plot.update_yaxes(title=None )
+    top10_plot.update_yaxes(title=None)
     top10_plot.update_xaxes(title=None, showgrid=False, showticklabels=False)
 
 
 # Output
     output_tuple = (
         pretty_date(df['Date'][slider_date]),
-        f'{millify(confirmed_count)} cas',
-        f'{millify(death_count)} morts',
+        f'{millify(confirmed_count)}',
+        f'{millify(death_count)}',
         map_plot,
         total_case,
         new_cases_plot,
         top10_plot,
+        f'Evolution du nombre de {type_value}',
+        f'Nouveau {type_value}'
         )
     return output_tuple 
 
