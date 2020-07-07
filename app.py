@@ -13,6 +13,12 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Output, Input
 
+# config dash & plotly
+import plotly.io as pio
+pio.templates.default = "plotly_white"
+config_dash = {'displayModeBar': False}
+
+
 
 df = pd.read_csv('databasefr.csv')
 df.drop(columns=['Country/Region', 'Recovered',
@@ -115,7 +121,7 @@ app.layout = html.Div(
                         ],
                         className='d-flex justify-content-between h-75 align-items-center'
                     ),
-                    className=' p-3 my-3 header-container'
+                    className=' p-3 my-3 w-100 header-container'
                 ),
 
                 #Tabs & Filters
@@ -153,7 +159,7 @@ app.layout = html.Div(
                                 # 	),
                                 # 	lg=6
                                 # ),
-                                dbc.Col(dcc.Graph(id='map_plot',className='map'), lg=6),
+                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}), lg=6),
                                 dbc.Col(
                                     dbc.Row(
                                         [
@@ -164,10 +170,10 @@ app.layout = html.Div(
                                                         dbc.CardHeader(
                                                             'Pays les plus touchés'),
                                                         dbc.CardBody(
-                                                            dcc.Graph(id='top10', className='top-10-graph'))
+                                                            dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
                                                     ],
                                                     className='graph-card'),
-                                                lg=12
+                                                lg=12, sm=12
                                             ),
                                             dbc.Col(
                                                 dbc.Card(
@@ -175,10 +181,10 @@ app.layout = html.Div(
                                                         dbc.CardHeader(
                                                             children='Evolution du nombre de cas', id='total_case_title'),
                                                         dbc.CardBody(
-                                                            dcc.Graph(id='total_case_plot', className='total_case_plot'))
+                                                            dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
                                                     ],
                                                     className='graph-card'),
-                                                lg=12
+                                                lg=12, sm=12
                                             ),
                                             dbc.Col(
                                                 dbc.Card(
@@ -186,15 +192,15 @@ app.layout = html.Div(
                                                         dbc.CardHeader(
                                                             children='Nouveau cas', id='new_cases_title'),
                                                         dbc.CardBody(
-                                                            dcc.Graph(id='new_cases', className='new'))
+                                                            dcc.Graph(id='new_cases', className='new', config=config_dash))
                                                     ],
                                                     className='graph-card'),
-                                                lg=12
+                                                lg=12, sm=12
                                             )
                                         ],
                                         className='graphs'
                                     ),
-
+                                className='graphs-container'
                                 ),
 
                             ],
@@ -334,11 +340,10 @@ def global_update(slider_date, tabs_type, country_dropdown):
             x=global_diff['Date'],
             y=global_diff[new_type]))
 
-    new_cases_plot.update_layout(barmode='stack')
     new_cases_plot.update_yaxes(title=None)
     new_cases_plot.update_xaxes(title=None)
-    new_cases_plot.update_layout(
-        hovermode="x unified", showlegend=False, margin=dict(l=0, r=0, t=0, b=0))
+    new_cases_plot.update_layout(hovermode="x unified", showlegend=False,margin=dict(l=0, r=0, t=0, b=0))
+
 
 # 4. Top 10
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()

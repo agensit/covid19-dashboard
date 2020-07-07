@@ -1,16 +1,22 @@
 body{
-    background-color: #EDF2F3
+    background-color: #EDF2F3;
+    overflow-x: hidden;
 }
 
 .main-container{
-    max-width: 1600px;
+    max-width: 1800px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: auto;
+    
 }
 
 /*Header main title*/
 
-.header-container{
-    margin: 0 0 0 5rem;
-}
+/* .header-container{
+    margin: 0 0 0 0;
+} */
 
 .header{
     width: 100%;
@@ -29,7 +35,8 @@ body{
     
 /*count tabs */
 .tabs{
-    margin: 0 .9rem 0 9rem;
+    padding: 0;
+    margin: 0 0 0 .9rem;
 }
 
 .confirmed-case::after{
@@ -50,9 +57,8 @@ body{
     font-size:1.65em;
     align-items:center; 
     border: 1px solid rgba(0,0,0,.125);
-    padding: 0 0 0 2rem;
     border-radius:.25rem;
-    margin: 0;
+    margin: 0 auto;
     border: none!important;
     box-shadow: 0 5px 5px rgba(0,0,0,0.12), 0 5px 5px rgba(0,0,0,0.12);
     transition: all .3s ease-in-out !important;
@@ -82,7 +88,7 @@ body{
     box-shadow: 0 5px 5px rgba(0,0,0,0.12), 0 5px 5px rgba(0,0,0,0.12);
     margin-right: 30px;
     height: 140px;
-    width: 97%;
+    width: 100%;
 }
 .country-dropdown-el{
     margin-top: 1.6rem;
@@ -92,45 +98,48 @@ body{
 
 .data-display{
     display: flex;
-    width: 100%;
+    flex-direction: row;
+    width: 1920px;
     height: 100%;
     justify-content: center;
     align-items: center;
-    margin-bottom: 2rem;
+    margin: 0 2rem 2rem 0
 }
 
 
 /* Graphs layout */
 
+
+
 .graph-card{
-    height: 220px;
-    width: 100%;
+    height: 290px;
+    width: calc(100% - 11%);
 }
 
 
 .graphs{
     margin-top: 1.15rem;
+    margin-left: -1.99rem;
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     justify-content: center;
     width: 100%;
     height: 100%;
 }
 
 
-.total-case-new-cases{
+/* .total-case-new-cases{
     border: none !important;
     padding-left: 5rem;
 
-}
+} */
 
 
 .map{
     margin-top: 1.2rem;
-    margin-left: 6rem;
-    height: 700px;
-    width: 90%;
+    margin-left: 0;
+    height: 900px;
+    width: 99%;
 }
 
 .top-10-graph{
@@ -160,21 +169,26 @@ body{
 }
 
 
-/*media queries*/
+/*media queries for responsiveness*/
 
 
-@media screen and (max-width: 1580px) {
+@media screen and (max-width: 800px) {
 
     .main-container{
-        max-width: 950px;
+        max-width: 800px;
+        display: block;
+        margin: auto;
     }
 
     .header-container{
+        width: 100%;
         margin: 0 1rem 0 1rem;
+        margin: auto;
     }
 
 
     .tabs{
+        width: 100%;
         margin: 2rem 5rem 2rem -2rem;
     }
 
@@ -196,11 +210,10 @@ body{
     } 
 
     .data-display{
-        display: block;
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        width: 90vw;
+        margin: 0;
     }
     
 
@@ -208,5 +221,18 @@ body{
         margin: 0;
         height: 700px;
         width: 100%;
+    }
+
+    .graph-card{
+        height: 290px;
+        width: 100%;
+    }
+    
+    
+    .graphs{
+        margin: auto;
+        display: block;
+        width: 100%;
+        height: 100vh;
     }
   }
