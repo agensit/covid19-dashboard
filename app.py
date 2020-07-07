@@ -159,7 +159,7 @@ app.layout = html.Div(
                                 # 	),
                                 # 	lg=6
                                 # ),
-                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}), lg=6),
+                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=6, className='pr-0'),
                                 dbc.Col(
                                     dbc.Row(
                                         [
@@ -173,7 +173,7 @@ app.layout = html.Div(
                                                             dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
                                                     ],
                                                     className='graph-card'),
-                                                lg=12, sm=12
+                                                 lg=12
                                             ),
                                             dbc.Col(
                                                 dbc.Card(
@@ -184,7 +184,7 @@ app.layout = html.Div(
                                                             dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
                                                     ],
                                                     className='graph-card'),
-                                                lg=12, sm=12
+                                                lg=12
                                             ),
                                             dbc.Col(
                                                 dbc.Card(
@@ -195,13 +195,13 @@ app.layout = html.Div(
                                                             dcc.Graph(id='new_cases', className='new', config=config_dash))
                                                     ],
                                                     className='graph-card'),
-                                                lg=12, sm=12
+                                                lg=12
                                             )
                                         ],
                                         className='graphs'
                                     ),
-                                className='graphs-container'
-                                ),
+                                className='graphs-container p-0',
+                                sm=12, lg=6),
 
                             ],
                             className='map-top10-row'
