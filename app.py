@@ -17,6 +17,7 @@ from dash.dependencies import Output, Input
 import plotly.io as pio
 pio.templates.default = "plotly_white"
 config_dash = {'displayModeBar': False}
+margin = dict(l=0, r=0, t=0, b=0)
 
 
 
@@ -94,9 +95,7 @@ filters = dbc.Card([
 ], className='filter-card')
 
 
-# colorized title
-# TODO: make it bigger
-titleSpanRed = html.Span(children='COVID-19', style={'color': 'red'})
+
 
 
 # app = app.server
@@ -111,10 +110,8 @@ app.layout = html.Div(
                         [
                             html.Div(
                                 children=[
-                                    dbc.Col(html.H1(id='my_title', children=[
-                                            'Evolution du ', titleSpanRed, ' à travers le monde']), sm=12, md=8),
-                                    dbc.Col(
-                                        html.H2(id='my_date', className='header-date'), sm=12, md=4)
+                                    dbc.Col(html.H1(id='my_title'), sm=12, md=8),
+                                    dbc.Col(html.H2(id='my_date', className='header-date'), sm=12, md=4)
                                 ],
                                 className='header d-flex'
                             )
@@ -130,9 +127,9 @@ app.layout = html.Div(
                         dbc.Col(
                             dcc.Tabs(id="tabs", value='Confirmed',
                                      children=[
-                                         dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'red'},
+                                         dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'rgb(21, 99, 255)'},
                                                  className='count-card confirmed-case', selected_className='count-selected'),
-                                         dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'red'},
+                                         dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'rgb(237, 29, 48)'},
                                                  className='count-card confirmed-death', selected_className='count-selected')
                                      ]
                                      ),
@@ -234,7 +231,8 @@ app.layout = html.Div(
         Output('new_cases', 'figure'),
         Output('top10', 'figure'),
         Output('total_case_title', 'children'),
-        Output('new_cases_title', 'children')
+        Output('new_cases_title', 'children'),
+        Output('my_title', 'children')
     ],
     [
         Input('date_slider', 'value'),
@@ -267,11 +265,19 @@ def global_update(slider_date, tabs_type, country_dropdown):
     diff['new_deaths'] = diff['Death'] - diff['Death'].shift(1)
     diff.dropna(inplace=True)
 
+    # color update
+    if tabs_type == 'Death':
+        marker_color = 'rgb(237, 29, 48)'
+
+    else:
+        marker_color = 'rgb(21, 99, 255)'
+    colorized_elm = html.Span(children='COVID-19', style={'color': marker_color})
     # hoverinfo in french
     type_value = 'cas' if tabs_type == 'Confirmed' else 'morts'
 
 # 1. MAP
     if country_dropdown:
+        filtred_df = filtred_df[filtred_df['Death']>0]
         map_plot = go.Figure([go.Scattermapbox(
             lat=filtred_df[filtred_df['State'] == country]['Lat'],
             lon=filtred_df[filtred_df['State'] == country]['Long'],
@@ -290,17 +296,17 @@ def global_update(slider_date, tabs_type, country_dropdown):
             lon=filtred_df['Long'],
             customdata=filtred_df['State'],
             text=filtred_df[tabs_type].map(lambda x: millify(x)),
+            marker_color=marker_color,
             marker=go.scattermapbox.Marker(
                 size=filtred_df[f'disc_{tabs_type}']),
             hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>'))
 
-    map_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12), margin=dict(l=0, r=0, t=0, b=0),
+    map_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12), margin=margin,
                            mapbox={'accesstoken': mapbox_access_token, 'zoom': 0.4}, showlegend=False)
 
  # 2. Cases over time
     if country_dropdown:
-        global_increase = slice_df.groupby(
-            ['Date', 'State']).sum().reset_index()
+        global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index()
         total_case = go.Figure([go.Scatter(
             x=global_increase[global_increase['State'] == country]['Date'],
             y=global_increase[global_increase['State'] == country][tabs_type],
@@ -311,12 +317,12 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
         total_case = go.Figure(go.Scatter(
             x=global_increase['Date'],
-            y=global_increase[tabs_type]))
+            y=global_increase[tabs_type],
+            marker_color=marker_color))
 
     total_case.update_yaxes(title=None)
-    total_case.update_xaxes(title=None)
-    total_case.update_layout(hovermode="x unified",
-                             margin=dict(l=0, r=0, t=0, b=0))
+    total_case.update_xaxes(showgrid=False)
+    total_case.update_layout(hovermode="x unified", margin=margin)
 
 # 3. New Cases Over time
     new_type = 'new_cases' if tabs_type == 'Confirmed' else 'new_deaths'
@@ -338,11 +344,12 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
         new_cases_plot = go.Figure(go.Bar(
             x=global_diff['Date'],
+            marker_color=marker_color,
             y=global_diff[new_type]))
 
     new_cases_plot.update_yaxes(title=None)
     new_cases_plot.update_xaxes(title=None)
-    new_cases_plot.update_layout(hovermode="x unified", showlegend=False,margin=dict(l=0, r=0, t=0, b=0))
+    new_cases_plot.update_layout(hovermode="x unified", showlegend=False,barmode='stack',margin=margin)
 
 
 # 4. Top 10
@@ -354,7 +361,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
             y=top10[top10['State'] == country]['State'], name=country,
             text=top10[top10['State'] == country][tabs_type],
             textposition='outside',
-            hovertemplate='<b>%{y}</b><br>' + '%{text:.2s}' +
+            hovertemplate='%{text:.2s}' +
             f' {type_value}'+'<extra></extra>',
             orientation='h')
             for country in country_dropdown])
@@ -363,20 +370,17 @@ def global_update(slider_date, tabs_type, country_dropdown):
         top10_plot = go.Figure(go.Bar(
             x=top10[tabs_type],
             y=top10['State'],
-            # hoverinfo = 'text+y',
-            hovertemplate='<b>%{y}</b><br>' + '%{text:.2s}' + \
+            hovertemplate='%{text:.2s}' + 
             f' {type_value}'+'<extra></extra>',
             text=top10[tabs_type],
+            marker_color=marker_color,
             textposition='outside',
             orientation='h'))
 
-    top10_plot.update_layout(hoverlabel=dict(
-        bgcolor="white", font_size=12), showlegend=False, margin=dict(l=0, r=0, t=0, b=0))
-    top10_plot.update_traces(
-        texttemplate='%{text:.2s}', textposition='outside')
-    top10_plot.update_yaxes(title=None)
+    top10_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12),
+        hovermode="y unified", showlegend=False, margin=margin)
+    top10_plot.update_traces(texttemplate='%{text:.2s}', textposition='outside')
     top10_plot.update_xaxes(title=None, showgrid=False, showticklabels=False)
-
 
 # Output
     output_tuple = (
@@ -388,7 +392,8 @@ def global_update(slider_date, tabs_type, country_dropdown):
         new_cases_plot,
         top10_plot,
         f'Evolution du nombre de {type_value}',
-        f'Nouveau {type_value}'
+        f'Nouveau {type_value}',
+        ['Evolution du ', colorized_elm, ' à travers le monde']
     )
     return output_tuple
 
