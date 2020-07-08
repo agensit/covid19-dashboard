@@ -43,7 +43,7 @@ body{
     display: flex;
     justify-content: center;
     content: 'cas';
-    color: black
+    color: white
 }
 
 
@@ -71,15 +71,15 @@ body{
 }
 
 .count-selected{
-    color: red!important;
-    background-color: #BFBFBD!important;
+    color:white!important;
+    background-color: rgba(21, 99, 255,0.90)!important;
 }
 
 .confirmed-death::after{
     display: flex;
     justify-content: center;
     content: 'morts';
-    color: black
+    color: white
 }
 
 /*filter card */
