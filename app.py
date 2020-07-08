@@ -242,131 +242,88 @@ app.layout = html.Div(
 )
 def global_update(slider_date, tabs_type, country_dropdown):
 
-    # 0. Preparation
+# 0. Design
+    # color and french legend
+    if tabs_type == 'Death':
+        marker_color = 'rgb(237, 29, 48)'
+        type_value = 'morts'
 
-    # filtre df
+    else:
+        marker_color = 'rgb(21, 99, 255)'
+        type_value = 'cas'
+
+    colorized_elm = html.Span(children='COVID-19', style={'color': marker_color})
+
+# 1. Preparation
+    # global or detailed analysis ?
     if country_dropdown:
-        df1 = pd.DataFrame([])
-        for country in country_dropdown:
-            df_country = df[df['State'] == country]
-            df1 = pd.concat([df1, df_country])
-        df1.reset_index(inplace=True)
+        df1 = df[df['State'].isin(country_dropdown)].reset_index(drop=True)
     else:
         df1 = df.copy()
 
-    filtred_df = df1[df1['Date'] == df1['Date'][slider_date]]
-    slice_df = df1[df1['Date'] <= df1['Date'][slider_date]]
-    # total count
-    confirmed_count = filtred_df['Confirmed'].sum()
-    death_count = filtred_df['Death'].sum()
-    # create new columns
+    # filtred by date
+    filtred_df = df1[df1['Date'] == df1['Date'][slider_date]].reset_index(drop=True)
+    slice_df = df1[df1['Date'] <= df1['Date'][slider_date]].reset_index(drop=True)
+    if country_dropdown:
+        country_order = slice_df.groupby('State').sum().sort_values(by=tabs_type).index
+    # create 'new_cases' and 'new_deaths'
     diff = slice_df.copy()
     diff['new_cases'] = diff['Confirmed'] - diff['Confirmed'].shift(1)
     diff['new_deaths'] = diff['Death'] - diff['Death'].shift(1)
     diff.dropna(inplace=True)
-
-    # color update
-    if tabs_type == 'Death':
-        marker_color = 'rgb(237, 29, 48)'
-
-    else:
-        marker_color = 'rgb(21, 99, 255)'
-    colorized_elm = html.Span(children='COVID-19', style={'color': marker_color})
-    # hoverinfo in french
-    type_value = 'cas' if tabs_type == 'Confirmed' else 'morts'
-
-# 1. MAP
+    # total count
+    confirmed_count = filtred_df['Confirmed'].sum()
+    death_count = filtred_df['Death'].sum()
+    
+# 2. MAP
     if country_dropdown:
-        filtred_df = filtred_df[filtred_df['Death']>0]
+        df_map = filtred_df[filtred_df['Death']>0].set_index('State')
+        df_map = filtred_df.set_index('State')
+
         map_plot = go.Figure([go.Scattermapbox(
-            lat=filtred_df[filtred_df['State'] == country]['Lat'],
-            lon=filtred_df[filtred_df['State'] == country]['Long'],
-            customdata=filtred_df[filtred_df['State'] == country]['State'],
-            text=filtred_df[filtred_df['State'] ==
-                            country][tabs_type].map(lambda x: millify(x)),
+            lat=[df_map.loc[c,'Lat']],
+            lon=[df_map.loc[c,'Long']],
+            customdata=[c],
+            text=[millify(df_map.loc[c,tabs_type])],
             marker=go.scattermapbox.Marker(
-                size=filtred_df[filtred_df['State'] == country][f'disc_{tabs_type}'] + 4, sizemin=4),
-            hovertemplate='<b>%{customdata}</b><br>' +
-            '%{text}' + f'{type_value}' '<extra></extra>',
-            name=country)
-            for country in country_dropdown])
+                size=[df_map.loc[c,f'disc_{tabs_type}'] + 4], sizemin=4),
+            hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>')
+            for c in country_order])
+
+        map_plot.update_layout(mapbox={'zoom': 0.4})
     else:
+        if tabs_type == 'Death':
+            df_map = filtred_df[filtred_df['Death']>0] 
+        else:
+            df_map = filtred_df.copy()
         map_plot = go.Figure(go.Scattermapbox(
-            lat=filtred_df['Lat'],
-            lon=filtred_df['Long'],
-            customdata=filtred_df['State'],
-            text=filtred_df[tabs_type].map(lambda x: millify(x)),
+            lat=df_map['Lat'],
+            lon=df_map['Long'],
+            customdata=df_map['State'], 
+            text=df_map[tabs_type].map(lambda x: millify(x)),
             marker_color=marker_color,
             marker=go.scattermapbox.Marker(
-                size=filtred_df[f'disc_{tabs_type}']),
+                size=df_map[f'disc_{tabs_type}']),
             hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>'))
+        map_plot.update_layout(mapbox={'zoom': 0.4}) 
 
     map_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12), margin=margin,
-                           mapbox={'accesstoken': mapbox_access_token, 'zoom': 0.4}, showlegend=False)
-
- # 2. Cases over time
-    if country_dropdown:
-        global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index()
-        total_case = go.Figure([go.Scatter(
-            x=global_increase[global_increase['State'] == country]['Date'],
-            y=global_increase[global_increase['State'] == country][tabs_type],
-            name=country)
-            for country in country_dropdown])
-    else:
-        global_increase = slice_df.groupby('Date').sum().reset_index()
-
-        total_case = go.Figure(go.Scatter(
-            x=global_increase['Date'],
-            y=global_increase[tabs_type],
-            marker_color=marker_color))
-
-    total_case.update_yaxes(title=None)
-    total_case.update_xaxes(showgrid=False)
-    total_case.update_layout(hovermode="x unified", margin=margin)
-
-# 3. New Cases Over time
-    new_type = 'new_cases' if tabs_type == 'Confirmed' else 'new_deaths'
-
-    if country_dropdown:
-        global_diff = diff.groupby(['Date', 'State']).sum().reset_index()
-        global_diff = global_diff[global_diff['new_cases'] > 0]
-        global_diff = global_diff[global_diff['new_deaths'] > 0]
-
-        new_cases_plot = go.Figure([go.Bar(
-            x=global_diff[global_diff['State'] == country]['Date'],
-            y=global_diff[global_diff['State'] == country][new_type],
-            name=country)
-            for country in country_dropdown])
-    else:
-        global_diff = diff.groupby('Date').sum().reset_index()
-        global_diff = global_diff[global_diff['new_cases'] > 0]
-        global_diff = global_diff[global_diff['new_deaths'] > 0]
-
-        new_cases_plot = go.Figure(go.Bar(
-            x=global_diff['Date'],
-            marker_color=marker_color,
-            y=global_diff[new_type]))
-
-    new_cases_plot.update_yaxes(title=None)
-    new_cases_plot.update_xaxes(title=None)
-    new_cases_plot.update_layout(hovermode="x unified", showlegend=False,barmode='stack',margin=margin)
-
-
-# 4. Top 10
+                           mapbox={'accesstoken': mapbox_access_token}, showlegend=False)
+# 3. Top 10
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()
     top10 = top10.nlargest(10, tabs_type)
+    top10.sort_values(tabs_type, inplace=True)
     if country_dropdown:
+        top10.set_index('State',inplace=True)
         top10_plot = go.Figure([go.Bar(
-            x=top10[top10['State'] == country][tabs_type],
-            y=top10[top10['State'] == country]['State'], name=country,
-            text=top10[top10['State'] == country][tabs_type],
+            x=[top10.loc[c,tabs_type]],
+            y=[c], 
+            text=[top10.loc[c, tabs_type]],
             textposition='outside',
-            hovertemplate='%{text:.2s}' +
-            f' {type_value}'+'<extra></extra>',
+            hovertemplate='%{text:.2s}' + f' {type_value}'+'<extra></extra>',
             orientation='h')
-            for country in country_dropdown])
+            for c in country_order])
     else:
-        top10.sort_values(tabs_type, inplace=True)
         top10_plot = go.Figure(go.Bar(
             x=top10[tabs_type],
             y=top10['State'],
@@ -381,6 +338,50 @@ def global_update(slider_date, tabs_type, country_dropdown):
         hovermode="y unified", showlegend=False, margin=margin)
     top10_plot.update_traces(texttemplate='%{text:.2s}', textposition='outside')
     top10_plot.update_xaxes(title=None, showgrid=False, showticklabels=False)
+ # 4. Cases over time
+    if country_dropdown:
+        global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index(level='Date')
+        total_case = go.Figure([go.Scatter(
+            x=global_increase.loc[country,'Date'],
+            y=global_increase.loc[country, tabs_type],
+            name=country)
+            for country in country_order])
+    else:
+        global_increase = slice_df.groupby('Date').sum().reset_index()
+        total_case = go.Figure(go.Scatter(
+            x=global_increase['Date'],
+            y=global_increase[tabs_type],
+            marker_color=marker_color))
+
+    total_case.update_yaxes(title=None)
+    total_case.update_xaxes(showgrid=False)
+    total_case.update_layout(hovermode="x unified", margin=margin)
+
+# 5. New Cases Over time
+    new_type = 'new_cases' if tabs_type == 'Confirmed' else 'new_deaths'
+    if country_dropdown:
+        global_diff = diff.groupby(['Date', 'State']).sum().reset_index(level='Date')
+        global_diff[global_diff['new_cases'] < 0].loc[:,'new_cases'] = 0
+        global_diff[global_diff['new_deaths'] < 0].loc[:,'new_deaths'] = 0
+        new_cases_plot = go.Figure([go.Bar(
+            x=global_diff.loc[country,'Date'],
+            y=global_diff.loc[country, new_type],
+            name=country)
+            for country in country_order])
+        print(global_diff)
+    else:
+        global_diff = diff.groupby('Date').sum().reset_index()
+        global_diff = global_diff[global_diff['new_cases'] > 0]
+        global_diff = global_diff[global_diff['new_deaths'] > 0]
+
+        new_cases_plot = go.Figure(go.Bar(
+            x=global_diff['Date'],
+            marker_color=marker_color,
+            y=global_diff[new_type]))
+
+    new_cases_plot.update_yaxes(title=None)
+    new_cases_plot.update_xaxes(title=None)
+    new_cases_plot.update_layout(hovermode="x unified", showlegend=False,barmode='stack',margin=margin)
 
 # Output
     output_tuple = (
