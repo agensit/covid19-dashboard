@@ -268,10 +268,13 @@ def global_update(slider_date, tabs_type, country_dropdown):
     # color update
     if tabs_type == 'Death':
         marker_color = 'rgb(237, 29, 48)'
+        badge_text = "Nombre de morts"
 
     else:
+        badge_text = "Nombre de cas"
         marker_color = 'rgb(21, 99, 255)'
     colorized_elm = html.Span(children='COVID-19', style={'color': marker_color})
+    colorized_badge = dbc.Badge(badge_text, className="ml-1 bg-white", style={'color': marker_color})
     # hoverinfo in french
     type_value = 'cas' if tabs_type == 'Confirmed' else 'morts'
 
@@ -393,7 +396,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
         top10_plot,
         f'Evolution du nombre de {type_value}',
         f'Nouveau {type_value}',
-        ['Evolution du ', colorized_elm, ' à travers le monde']
+        ['Evolution du ', colorized_elm,' à travers le monde en', colorized_badge]
     )
     return output_tuple
 
