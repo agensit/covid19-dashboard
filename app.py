@@ -31,8 +31,6 @@ confirmed_count = df[df['Date'] == last_date]['Confirmed'].sum()
 death_count = df[df['Date'] == last_date]['Death'].sum()
 
 # discretization
-
-
 def discretize(serie, buckets):
     return pd.cut(serie.tolist(), buckets).codes
 
@@ -41,8 +39,6 @@ df['disc_Confirmed'] = discretize(df['Confirmed'].map(lambda x: x ** 0.4), 30)
 df['disc_Death'] = discretize(df['Death'].map(lambda x: x ** 0.4), 30)
 
 # create readable number
-
-
 def millify(n):
     if n > 999:
         if n > 1e6-1:
@@ -109,16 +105,11 @@ app.layout = html.Div(
                     dbc.Row(
                         [
                             html.Div(
-                                children=[
-                                    dbc.Col(html.H1(id='my_title'), sm=12, md=8),
-                                    dbc.Col(html.H2(id='my_date', className='header-date'), sm=12, md=4)
-                                ],
-                                className='header d-flex'
-                            )
-                        ],
-                        className='d-flex justify-content-between h-75 align-items-center'
-                    ),
-                    className=' p-3 my-3 w-100 header-container'
+                                children=[dbc.Col(html.H1(id='my_title'), sm=12, md=8),
+                                          dbc.Col(html.H2(id='my_date', className='header-date'), sm=12, md=4)],
+                                className='header d-flex')
+                        ], className='d-flex justify-content-between h-75 align-items-center'
+                    ), className=' p-3 my-3 w-100 header-container'
                 ),
 
                 #Tabs & Filters
@@ -126,13 +117,13 @@ app.layout = html.Div(
                     [
                         dbc.Col(
                             dcc.Tabs(id="tabs", value='Confirmed',
-                                     children=[
-                                         dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'rgb(21, 99, 255)'},
+                                    children=[
+                                        dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'rgb(21, 99, 255)'},
                                                  className='count-card confirmed-case', selected_className='count-selected'),
-                                         dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'rgb(237, 29, 48)'},
+                                        dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'rgb(237, 29, 48)'},
                                                  className='count-card confirmed-death', selected_className='count-selected')
-                                     ]
-                                     ),
+                                        ]
+                                    ),
                             className='p-0 tabs'
                         ),
                         dbc.Col(filters, md=6, sm=12)
@@ -147,77 +138,38 @@ app.layout = html.Div(
                     [
                         dbc.Row(
                             [
-                                # dbc.Col(
-                                # 	dbc.Card(
-                                #   		[
-                                #   		    dbc.CardHeader("Propagation geograpique de la pandémie"),
-                                #   		    dbc.CardBody(dcc.Graph(id='map_plot', className='map'))
-                                #   		]
-                                # 	),
-                                # 	lg=6
-                                # ),
                                 dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=6, className='pr-0'),
-                                dbc.Col(
-                                    dbc.Row(
+                                dbc.Col(dbc.Row(
                                         [
-
-                                            dbc.Col(
-                                                dbc.Card(
+                                            dbc.Col(dbc.Card(
                                                     [
-                                                        dbc.CardHeader(
-                                                            'Pays les plus touchés'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
+                                                        dbc.CardHeader('Pays les plus touchés'),
+                                                        dbc.CardBody(dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
                                                     ],
                                                     className='graph-card'),
                                                  lg=12
                                             ),
-                                            dbc.Col(
-                                                dbc.Card(
+                                            dbc.Col(dbc.Card(
                                                     [
-                                                        dbc.CardHeader(
-                                                            children='Evolution du nombre de cas', id='total_case_title'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
-                                                    ],
+                                                        dbc.CardHeader(children='Evolution du nombre de cas', id='total_case_title'),
+                                                        dbc.CardBody(dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
+                                                    ], 
                                                     className='graph-card'),
                                                 lg=12
                                             ),
-                                            dbc.Col(
-                                                dbc.Card(
+                                            dbc.Col(dbc.Card(
                                                     [
-                                                        dbc.CardHeader(
-                                                            children='Nouveau cas', id='new_cases_title'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='new_cases', className='new', config=config_dash))
-                                                    ],
-                                                    className='graph-card'),
-                                                lg=12
-                                            )
-                                        ],
-                                        className='graphs'
-                                    ),
-                                className='graphs-container p-0',
-                                sm=12, lg=6),
-
-                            ],
-                            className='map-top10-row'
-                        )
-
-                    ],
-                    className='px-3 map-graph-row'
-                ),
-                    ],
-                    className='data-display'
-                )
-         
-            ],
-            fluid=True,
-        className='main-container'),
+                                                     dbc.CardHeader(children='Nouveau cas', id='new_cases_title'),
+                                                     dbc.CardBody(dcc.Graph(id='new_cases', className='new', config=config_dash))
+                                                     ], className='graph-card'), lg=12)
+                                        ], className='graphs'
+                                    ), className='graphs-container p-0', sm=12, lg=6),
+                            ], className='map-top10-row')
+                    ], className='px-3 map-graph-row'),
+                    ], className='data-display')
+            ], fluid=True, className='main-container'),
         # Footer
-        html.Footer(
-            children=[html.P(children='©️2020 Agensit')], className='footer')
-    ]
+        html.Footer(children=[html.P(children='©️2020 Agensit')], className='footer')]
 )
 
 
@@ -353,34 +305,34 @@ def global_update(slider_date, tabs_type, country_dropdown):
             y=global_increase[tabs_type],
             marker_color=marker_color))
 
-    total_case.update_yaxes(title=None)
-    total_case.update_xaxes(showgrid=False)
+    total_case.update_yaxes(showline=True)
+    total_case.update_xaxes(nticks=5)
     total_case.update_layout(hovermode="x unified", margin=margin)
 
 # 5. New Cases Over time
     new_type = 'new_cases' if tabs_type == 'Confirmed' else 'new_deaths'
     if country_dropdown:
         global_diff = diff.groupby(['Date', 'State']).sum().reset_index(level='Date')
-        global_diff[global_diff['new_cases'] < 0].loc[:,'new_cases'] = 0
-        global_diff[global_diff['new_deaths'] < 0].loc[:,'new_deaths'] = 0
+        # delete negative value
+        global_diff.loc[global_diff['new_cases'] < 0,'new_cases'] = 0
+        global_diff.loc[global_diff['new_deaths'] < 0,'new_deaths'] = 0
         new_cases_plot = go.Figure([go.Bar(
             x=global_diff.loc[country,'Date'],
             y=global_diff.loc[country, new_type],
             name=country)
             for country in country_order])
-        print(global_diff)
     else:
         global_diff = diff.groupby('Date').sum().reset_index()
-        global_diff = global_diff[global_diff['new_cases'] > 0]
-        global_diff = global_diff[global_diff['new_deaths'] > 0]
+        global_diff.loc[global_diff['new_cases'] < 0,'new_cases'] = 0
+        global_diff.loc[global_diff['new_deaths'] < 0,'new_deaths'] = 0
 
         new_cases_plot = go.Figure(go.Bar(
             x=global_diff['Date'],
             marker_color=marker_color,
             y=global_diff[new_type]))
 
-    new_cases_plot.update_yaxes(title=None)
-    new_cases_plot.update_xaxes(title=None)
+    new_cases_plot.update_yaxes(showline=True)
+    new_cases_plot.update_xaxes(nticks=5)
     new_cases_plot.update_layout(hovermode="x unified", showlegend=False,barmode='stack',margin=margin)
 
 # Output
