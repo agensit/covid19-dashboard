@@ -23,7 +23,12 @@ body{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+    color: #333;
+}
+
+.title-badge{
+    font-size: 1.25rem;
+    background-color: white;
 }
 
 .header-date{
@@ -43,7 +48,7 @@ body{
     display: flex;
     justify-content: center;
     content: 'cas';
-    color: white
+    color: #333
 }
 
 
@@ -66,7 +71,7 @@ body{
 } 
 
 .count-card:hover{
-    transform: scale(1.06);
+    transform: scale(1.02);
     box-shadow: 0 10px 10px rgba(0,0,0,0.12), 0 10px 10px rgba(0,0,0,0.12);
 }
 
@@ -74,12 +79,28 @@ body{
     color:white!important;
     background-color: rgba(21, 99, 255,0.90)!important;
 }
+ /*tabs hover state and backgrounds*/
+ 
+.count-selected-case,
+.count-card.confirmed-case:hover{
+    color: white!important;
+    background-color: rgba(21, 99, 255,0.90);
+}
+
+
+.count-selected-death,
+.count-card.confirmed-death:hover{
+    color: white!important;
+    background-color: rgb(237, 29, 48)!important;
+}
+
+
 
 .confirmed-death::after{
     display: flex;
     justify-content: center;
     content: 'morts';
-    color: white
+    color: #333
 }
 
 /*filter card */
@@ -103,7 +124,7 @@ body{
     height: 100%;
     justify-content: center;
     align-items: center;
-    margin: 0 0 2rem 0
+    margin: 0 0 1.2rem 0
 }
 
 
@@ -113,18 +134,18 @@ body{
     display: flex;
     justify-content: center;
     margin: 0;
-    width: 80%;
+    width: 100%;
     padding: 0;
 }
 
 .graph-card{
-    height: 290px;
+    height: 267px;
     width: 100%;
 }
 
 
 .graphs{
-    margin-top: 1.15rem;
+    margin-top: 1.10rem;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -142,7 +163,7 @@ body{
 
 .map{
     margin-top: 1.2rem;
-    height: 900px;
+    height: 550px;
     width: 100%;
 }
 
@@ -155,6 +176,10 @@ body{
 .new{
     width: 100%;
     height: 100%;
+}
+
+.new-case-card{
+    margin-top: 1.2rem;
 }
 
 .total_case_plot{

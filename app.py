@@ -119,9 +119,9 @@ app.layout = html.Div(
                             dcc.Tabs(id="tabs", value='Confirmed', 
                                      children=[
                                          dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'rgb(21, 99, 255)'},
-                                                 className='count-card confirmed-case', selected_className='count-selected'),
+                                                 className='count-card confirmed-case', selected_className='count-selected count-selected-case'),
                                          dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'rgb(237, 29, 48)'},
-                                                 className='count-card confirmed-death', selected_className='count-selected')
+                                                 className='count-card confirmed-death', selected_className='count-selected count-selected-death')
                                      ]
                                      ),
                             className='p-0 tabs'
@@ -138,7 +138,7 @@ app.layout = html.Div(
                     [
                         dbc.Row(
                             [
-                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=6, className='pr-0'),
+                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=5, className='pr-0'),
                                 dbc.Col(
                                     dbc.Row(
                                         [
@@ -165,25 +165,26 @@ app.layout = html.Div(
                                                     className='graph-card'),
                                                 lg=12
                                             ),
-                                            dbc.Col(
-                                                dbc.Card(
-                                                    [
-                                                        dbc.CardHeader(
-                                                            children='Nouveau cas', id='new_cases_title'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='new_cases', className='new', config=config_dash))
-                                                    ],
-                                                    className='graph-card'),
-                                                lg=12
-                                            )
+
                                         ],
                                         className='graphs'
                                     ),
                                 className='graphs-container p-0',
-                                sm=12, lg=6),
-
+                                sm=12, lg=7),
+                                 dbc.Col(
+                                    dbc.Card(
+                                                [
+                                                    dbc.CardHeader(
+                                                            children='Nouveau cas', id='new_cases_title'),
+                                                        dbc.CardBody(
+                                                            dcc.Graph(id='new_cases', className='new', config=config_dash))
+                                                    ], className='graph-card new-case-card'
+                                                    ),
+                                                
+                                            )
                             ],
-                            className='map-top10-row'
+                            className='map-top10-row',
+                            
                         )
 
                     ],
@@ -247,8 +248,10 @@ def global_update(slider_date, tabs_type, country_dropdown):
     # color update
     if tabs_type == 'Death':
         marker_color = 'rgb(237, 29, 48)'
+        badge_text = "Nombre de morts"
 
     else:
+        badge_text = "Nombre de cas"
         marker_color = 'rgb(21, 99, 255)'
     colorized_elm = html.Span(children='COVID-19', style={'color': marker_color})
     # hoverinfo in french
@@ -363,7 +366,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
 # Output
     output_tuple = (
-        ['Evolution du ', colorized_elm, ' à travers le monde'],
+        ['Evolution du ', colorized_elm,' à travers le monde'],
         pretty_date(df['Date'][slider_date]),
         f'{millify(confirmed_count)}',
         f'{millify(death_count)}',
@@ -372,7 +375,8 @@ def global_update(slider_date, tabs_type, country_dropdown):
         new_cases_plot,
         top10_plot,
         f'Evolution du nombre de {type_value}',
-        f'Nouveau {type_value}'   
+        f'Nouveau {type_value}',
+          
     )
     return output_tuple
 
