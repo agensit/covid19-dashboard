@@ -14,30 +14,26 @@ import dash_html_components as html
 from dash.dependencies import Output, Input
 
 # config dash & plotly
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP]) # added Bootstrap CSS.
 import plotly.io as pio
 pio.templates.default = "plotly_white"
 config_dash = {'displayModeBar': False}
 margin = dict(l=0, r=0, t=0, b=0)
 
-
+# set the date to french format
+locale.setlocale(locale.LC_TIME, "fr_FR")
 
 df = pd.read_csv('databasefr.csv')
-df.drop(columns=['Country/Region', 'Recovered',
-                 'Province/State'], inplace=True)
+df.drop(columns=['Country/Region', 'Recovered','Province/State'], inplace=True)
 
 # create the counter
 last_date = df['Date'].max()
 confirmed_count = df[df['Date'] == last_date]['Confirmed'].sum()
 death_count = df[df['Date'] == last_date]['Death'].sum()
 
-# discretization
-def discretize(serie, buckets):
-    return pd.cut(serie.tolist(), buckets).codes
-
-
-df['disc_Confirmed'] = discretize(df['Confirmed'].map(lambda x: x ** 0.4), 30)
-df['disc_Death'] = discretize(df['Death'].map(lambda x: x ** 0.4), 30)
-
+# map markers' size
+df['marker_Confirmed'] = df['Confirmed'].map(lambda x: x ** 0.4)
+df['marker_Death'] = df['Death'].map(lambda x: x ** 0.4)
 # create readable number
 def millify(n):
     if n > 999:
@@ -46,30 +42,47 @@ def millify(n):
         return f'{round(n/1e3,1)}K'
     return n
 
-
-# set the date to french format
-locale.setlocale(locale.LC_TIME, "fr_FR")
-
-
 def pretty_date(str_date):
     date = parse(str_date)
     return date.strftime('%d %B %Y')
-
 
 # mapbox token acess
 with open('mapbox_token.txt') as f:
     lines = [x.rstrip() for x in f]
 mapbox_access_token = lines[0]
 
+# #### TEST
+# import itertools 
+
+# def find_pairs(lst):
+#     return [(a,b) for a,b in itertools.permutations(lst, 2)]
+
+# def dist(df, c1,c2):
+#     dff = df#.set_index('State')
+#     diff_lat = dff.loc[c1,'Lat'] - dff.loc[c2,'Lat']
+#     diff_long =  dff.loc[c1,'Long'] - dff.loc[c2,'Long']
+#     return np.sqrt(diff_lat ** 2 + diff_long ** 2)   
+
+# def get_max_dist(df, country_list):
+#     country_pairs = find_pairs(country_list)
+#     country_dist = []
+#     for pair in country_pairs:
+#         country_dist.append(dist(df, pair[0], pair[1]))
+#     if len(country_pairs) > 0: 
+#         return max(country_dist)
+#     else:
+#         return 1
+
+# # custom buckets
+# bins = [0, 10.3, 33.8, 79.8, 98.3, np.inf]
+# groups_names = [5, 4, 3, 2, 1]
+# def binning(df, country_list):
+#     dist = get_max_dist(df ,country_list)
+#     return pd.cut([dist], bins, labels=groups_names).tolist()
+# ####
+
 # DASH APP
-
-
-# added Bootstrap CSS.
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-
 server = app.server
-
-
 # filters component
 filters = dbc.Card([
     html.Div([
@@ -89,12 +102,6 @@ filters = dbc.Card([
             className='country-dropdown-el')
     ], style={'width': '100%', 'height': '100%', 'padding': '.9rem'})
 ], className='filter-card')
-
-
-
-
-
-# app = app.server
 
 app.layout = html.Div(
     [
@@ -172,7 +179,6 @@ app.layout = html.Div(
         html.Footer(children=[html.P(children='©️2020 Agensit')], className='footer')]
 )
 
-
 @app.callback(
     [
         Output('my_date', 'children'),
@@ -192,8 +198,8 @@ app.layout = html.Div(
         Input('country_dropdown', 'value')
     ]
 )
-def global_update(slider_date, tabs_type, country_dropdown):
 
+def global_update(slider_date, tabs_type, country_dropdown):
 # 0. Design
     # color and french legend
     if tabs_type == 'Death':
@@ -212,7 +218,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
         df1 = df[df['State'].isin(country_dropdown)].reset_index(drop=True)
     else:
         df1 = df.copy()
-
     # filtred by date
     filtred_df = df1[df1['Date'] == df1['Date'][slider_date]].reset_index(drop=True)
     slice_df = df1[df1['Date'] <= df1['Date'][slider_date]].reset_index(drop=True)
@@ -231,42 +236,45 @@ def global_update(slider_date, tabs_type, country_dropdown):
     if country_dropdown:
         df_map = filtred_df[filtred_df['Death']>0].set_index('State')
         df_map = filtred_df.set_index('State')
-
+        # zoom adjustment
+        # mean_lat = df_map['Lat'].mean()
+        # mean_lon = df_map['Long'].mean()
+        # zoom_size= binning(df_map, country_dropdown)[0] - 1
+        # plot
         map_plot = go.Figure([go.Scattermapbox(
             lat=[df_map.loc[c,'Lat']],
             lon=[df_map.loc[c,'Long']],
             customdata=[c],
             text=[millify(df_map.loc[c,tabs_type])],
-            marker=go.scattermapbox.Marker(
-                size=[df_map.loc[c,f'disc_{tabs_type}'] + 4], sizemin=4),
+            marker=dict(size=[df_map.loc[c,f'marker_{tabs_type}'] + 4], sizemin=3, sizeref=8),
             hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>')
             for c in country_order])
-
-        map_plot.update_layout(mapbox={'zoom': 0.4})
+        # map_plot.update_layout(mapbox={'zoom': zoom_size, 'center':dict(lat=mean_lat, lon=mean_lon)})
     else:
         if tabs_type == 'Death':
             df_map = filtred_df[filtred_df['Death']>0] 
         else:
             df_map = filtred_df.copy()
+        # plot
         map_plot = go.Figure(go.Scattermapbox(
             lat=df_map['Lat'],
             lon=df_map['Long'],
             customdata=df_map['State'], 
             text=df_map[tabs_type].map(lambda x: millify(x)),
             marker_color=marker_color,
-            marker=go.scattermapbox.Marker(
-                size=df_map[f'disc_{tabs_type}']),
+            marker=dict(size=df_map[f'marker_{tabs_type}'],sizemin=2, sizeref=8),
             hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>'))
-        map_plot.update_layout(mapbox={'zoom': 0.4}) 
+        # map_plot.update_layout(mapbox={'zoom': 0.4}) 
 
     map_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12), margin=margin,
-                           mapbox={'accesstoken': mapbox_access_token}, showlegend=False)
+                           mapbox={'zoom':0.4, 'accesstoken': mapbox_access_token}, showlegend=False)
 # 3. Top 10
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()
     top10 = top10.nlargest(10, tabs_type)
     top10.sort_values(tabs_type, inplace=True)
     if country_dropdown:
         top10.set_index('State',inplace=True)
+        # plot
         top10_plot = go.Figure([go.Bar(
             x=[top10.loc[c,tabs_type]],
             y=[c], 
@@ -276,6 +284,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
             orientation='h')
             for c in country_order])
     else:
+        # plot
         top10_plot = go.Figure(go.Bar(
             x=top10[tabs_type],
             y=top10['State'],
@@ -285,11 +294,11 @@ def global_update(slider_date, tabs_type, country_dropdown):
             marker_color=marker_color,
             textposition='outside',
             orientation='h'))
-
     top10_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12),
         hovermode="y unified", showlegend=False, margin=margin)
     top10_plot.update_traces(texttemplate='%{text:.2s}', textposition='outside')
     top10_plot.update_xaxes(title=None, showgrid=False, showticklabels=False)
+
  # 4. Cases over time
     if country_dropdown:
         global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index(level='Date')
@@ -304,7 +313,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
             x=global_increase['Date'],
             y=global_increase[tabs_type],
             marker_color=marker_color))
-
     total_case.update_yaxes(showline=True)
     total_case.update_xaxes(nticks=5)
     total_case.update_layout(hovermode="x unified", margin=margin)
@@ -316,21 +324,21 @@ def global_update(slider_date, tabs_type, country_dropdown):
         # delete negative value
         global_diff.loc[global_diff['new_cases'] < 0,'new_cases'] = 0
         global_diff.loc[global_diff['new_deaths'] < 0,'new_deaths'] = 0
+        # plot
         new_cases_plot = go.Figure([go.Bar(
-            x=global_diff.loc[country,'Date'],
-            y=global_diff.loc[country, new_type],
-            name=country)
-            for country in country_order])
+            x=global_diff.loc[c,'Date'],
+            y=global_diff.loc[c, new_type],
+            name=c)
+            for c in country_order])
     else:
         global_diff = diff.groupby('Date').sum().reset_index()
-        global_diff.loc[global_diff['new_cases'] < 0,'new_cases'] = 0
+        global_diff .loc[global_diff['new_cases'] < 0,'new_cases'] = 0
         global_diff.loc[global_diff['new_deaths'] < 0,'new_deaths'] = 0
-
+        # plot    
         new_cases_plot = go.Figure(go.Bar(
             x=global_diff['Date'],
             marker_color=marker_color,
             y=global_diff[new_type]))
-
     new_cases_plot.update_yaxes(showline=True)
     new_cases_plot.update_xaxes(nticks=5)
     new_cases_plot.update_layout(hovermode="x unified", showlegend=False,barmode='stack',margin=margin)
