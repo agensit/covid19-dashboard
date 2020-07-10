@@ -42,9 +42,9 @@ def millify(n):
         return f'{round(n/1e3,1)}K'
     return n
 
-def pretty_date(str_date):
+def pretty_date(str_date, date_format):
     date = parse(str_date)
-    return date.strftime('%d %B %Y')
+    return date.strftime(date_format) 
 
 # mapbox token acess
 with open('mapbox_token.txt') as f:
@@ -246,7 +246,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
             lon=[df_map.loc[c,'Long']],
             customdata=[c],
             text=[millify(df_map.loc[c,tabs_type])],
-            marker=dict(size=[df_map.loc[c,f'marker_{tabs_type}'] + 4], sizemin=3, sizeref=8),
+            marker=dict(size=[df_map.loc[c,f'marker_{tabs_type}'] * 2], sizemin=3, sizeref=8),
             hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>')
             for c in country_order])
         # map_plot.update_layout(mapbox={'zoom': zoom_size, 'center':dict(lat=mean_lat, lon=mean_lon)})
@@ -294,28 +294,27 @@ def global_update(slider_date, tabs_type, country_dropdown):
             marker_color=marker_color,
             textposition='outside',
             orientation='h'))
-    top10_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12),
-        hovermode="y unified", showlegend=False, margin=margin)
+    top10_plot.update_layout(hovermode="y unified", showlegend=False, margin=margin)
     top10_plot.update_traces(texttemplate='%{text:.2s}', textposition='outside')
-    top10_plot.update_xaxes(title=None, showgrid=False, showticklabels=False)
+    top10_plot.update_xaxes(showgrid=False, showticklabels=False)
 
  # 4. Cases over time
     if country_dropdown:
         global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index(level='Date')
         total_case = go.Figure([go.Scatter(
-            x=global_increase.loc[country,'Date'],
+            x=global_increase.loc[country,'Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
             y=global_increase.loc[country, tabs_type],
             name=country)
             for country in country_order])
     else:
         global_increase = slice_df.groupby('Date').sum().reset_index()
         total_case = go.Figure(go.Scatter(
-            x=global_increase['Date'],
+            x=global_increase['Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
             y=global_increase[tabs_type],
             marker_color=marker_color))
     total_case.update_yaxes(showline=True)
-    total_case.update_xaxes(nticks=5)
-    total_case.update_layout(hovermode="x unified", margin=margin)
+    total_case.update_xaxes(showline=True, showgrid=False, showticklabels=False)
+    total_case.update_layout(hovermode="x unified", margin=margin, showlegend=False)
 
 # 5. New Cases Over time
     new_type = 'new_cases' if tabs_type == 'Confirmed' else 'new_deaths'
@@ -326,7 +325,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
         global_diff.loc[global_diff['new_deaths'] < 0,'new_deaths'] = 0
         # plot
         new_cases_plot = go.Figure([go.Bar(
-            x=global_diff.loc[c,'Date'],
+            x=global_diff.loc[c,'Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
             y=global_diff.loc[c, new_type],
             name=c)
             for c in country_order])
@@ -336,24 +335,24 @@ def global_update(slider_date, tabs_type, country_dropdown):
         global_diff.loc[global_diff['new_deaths'] < 0,'new_deaths'] = 0
         # plot    
         new_cases_plot = go.Figure(go.Bar(
-            x=global_diff['Date'],
+            x=global_diff['Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
             marker_color=marker_color,
             y=global_diff[new_type]))
     new_cases_plot.update_yaxes(showline=True)
-    new_cases_plot.update_xaxes(nticks=5)
+    new_cases_plot.update_xaxes(showticklabels=False)
     new_cases_plot.update_layout(hovermode="x unified", showlegend=False,barmode='stack',margin=margin)
 
 # Output
     output_tuple = (
-        pretty_date(df['Date'][slider_date]),
+        pretty_date(df['Date'][slider_date], '%d %B %Y'),
         f'{millify(confirmed_count)}',
         f'{millify(death_count)}',
         map_plot,
         total_case,
         new_cases_plot,
         top10_plot,
-        f'Evolution du nombre de {type_value}',
-        f'Nouveau {type_value}',
+        f'Evolution du nombre total de {type_value}',
+        f'Nombre de nouveau {type_value} par jour',
         ['Evolution du ', colorized_elm, ' à travers le monde']
     )
     return output_tuple
