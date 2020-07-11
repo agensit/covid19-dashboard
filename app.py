@@ -124,11 +124,11 @@ app.layout = html.Div(
                                                  className='count-card confirmed-death', selected_className='count-selected count-selected-death')
                                      ]
                                      ),
-                            className='p-0 tabs'
+                            className='p-0 tabs',
                         ),
-                        dbc.Col(filters, md=6, sm=12)
+                        dbc.Col(filters, md=7, sm=12,)
                     ],
-                    className='h-50 mb-2'
+                    className='h-50 tabs-filter-container'
                 ),
 
                 # Figures
@@ -151,7 +151,7 @@ app.layout = html.Div(
                                                         dbc.CardBody(
                                                             dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
                                                     ],
-                                                    className='graph-card'),
+                                                    className='graph-card '),
                                                  lg=12
                                             ),
                                             dbc.Col(
@@ -162,7 +162,7 @@ app.layout = html.Div(
                                                         dbc.CardBody(
                                                             dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
                                                     ],
-                                                    className='graph-card'),
+                                                    className='graph-card new-case-card'),
                                                 lg=12
                                             ),
 
@@ -178,7 +178,7 @@ app.layout = html.Div(
                                                             children='Nouveau cas', id='new_cases_title'),
                                                         dbc.CardBody(
                                                             dcc.Graph(id='new_cases', className='new', config=config_dash))
-                                                    ], className='graph-card new-case-card'
+                                                    ], className='graph-card total-case-card'
                                                     ),
                                                 
                                             )

@@ -3,6 +3,8 @@ body{
     overflow-x: hidden;
 }
 
+/* principal container for all display*/
+
 .main-container{
     max-width: 1800px;
     display: flex;
@@ -21,15 +23,12 @@ body{
 .header{
     width: 100%;
     display: flex;
+    height: 5vh;
     justify-content: space-between;
     align-items: center;
     color: #333;
 }
 
-.title-badge{
-    font-size: 1.25rem;
-    background-color: white;
-}
 
 .header-date{
     display: flex;
@@ -38,10 +37,17 @@ body{
     margin-top: 0.5rem;
 }
     
-/*count tabs */
+/*count tabs & filter */
+
+.tabs-filter-container{
+    margin-top: -0.5rem;
+    margin-bottom: -0.7rem
+}
+
 .tabs{
     padding: 0;
-    margin: 0 0 0 .9rem;
+    margin: 0 -0.1% 0 1rem;
+    width: 50%;
 }
 
 .confirmed-case::after{
@@ -50,13 +56,30 @@ body{
     content: 'cas';
     color: #333
 }
+.confirmed-death::after{
+    display: flex;
+    justify-content: center;
+    content: 'morts';
+    color: #333
+}
 
+ /*
+ Tabs style
+ count selected and count card hover state font-color 
+ 
+ */
 
+.count-selected-case::after,
+.count-selected-death::after,
+.count-card:hover::after{
+    color: white;
+    background: transparent;
+}
 
 .count-card{
     background: #fff;
     width: 100%; 
-    height : 140px; 
+    height : 120px; 
     display:flex; 
     flex-direction:column;
     font-size:1.65em;
@@ -75,10 +98,12 @@ body{
     box-shadow: 0 10px 10px rgba(0,0,0,0.12), 0 10px 10px rgba(0,0,0,0.12);
 }
 
+
 .count-selected{
     color:white!important;
     background-color: rgba(21, 99, 255,0.90)!important;
 }
+
  /*tabs hover state and backgrounds*/
  
 .count-selected-case,
@@ -96,35 +121,34 @@ body{
 
 
 
-.confirmed-death::after{
-    display: flex;
-    justify-content: center;
-    content: 'morts';
-    color: #333
-}
 
-/*filter card */
+
+/*
+filter card style 
+*/
 
 .filter-card{
     box-shadow: 0 5px 5px rgba(0,0,0,0.12), 0 5px 5px rgba(0,0,0,0.12);
     margin-right: 30px;
-    height: 140px;
+    height: 120px;
     width: 100%;
 }
 .country-dropdown-el{
-    margin-top: 1.6rem;
+    margin-top: .5rem;
 }
 
-/* map & graph display */
+/* 
+map & graph display style
+*/
 
 .data-display{
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    height: 50%;
     justify-content: center;
     align-items: center;
-    margin: 0 0 1.2rem 0
+    margin-bottom: 2rem;
 }
 
 
@@ -139,7 +163,7 @@ body{
 }
 
 .graph-card{
-    height: 267px;
+    height: 250px;
     width: 100%;
 }
 
@@ -154,16 +178,9 @@ body{
 }
 
 
-/* .total-case-new-cases{
-    border: none !important;
-    padding-left: 5rem;
-
-} */
-
-
 .map{
     margin-top: 1.2rem;
-    height: 550px;
+    height: 500px;
     width: 100%;
 }
 
@@ -179,7 +196,12 @@ body{
 }
 
 .new-case-card{
-    margin-top: 1.2rem;
+    margin-top: -0.5rem;
+}
+
+
+.total-case-card{
+    margin-top: .8rem;
 }
 
 .total_case_plot{
@@ -218,7 +240,7 @@ body{
 
     .tabs{
         width: 100%;
-        margin: 2rem 5rem 2rem -2rem;
+        margin: 2rem 5rem 0rem -2rem;
     }
 
     .count-card{
