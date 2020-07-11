@@ -1,4 +1,3 @@
-import locale
 import os
 
 import pandas as pd
@@ -19,11 +18,15 @@ pio.templates.default = "plotly_white"
 config_dash = {'displayModeBar': False}
 margin = dict(l=0, r=0, t=0, b=0)
 
+# set the date to french format
+import locale
+locale.setlocale(locale.LC_TIME, "fr_FR")
+
 
 
 df = pd.read_csv('databasefr.csv')
-df.drop(columns=['Country/Region', 'Recovered',
-                 'Province/State'], inplace=True)
+# need to be delete
+df.drop(columns=['Country/Region', 'Recovered','Province/State'], inplace=True)
 
 # create the counter
 last_date = df['Date'].max()
@@ -31,28 +34,18 @@ confirmed_count = df[df['Date'] == last_date]['Confirmed'].sum()
 death_count = df[df['Date'] == last_date]['Death'].sum()
 
 # discretization
-
-
 def discretize(serie, buckets):
     return pd.cut(serie.tolist(), buckets).codes
-
-
 df['disc_Confirmed'] = discretize(df['Confirmed'].map(lambda x: x ** 0.4), 30)
 df['disc_Death'] = discretize(df['Death'].map(lambda x: x ** 0.4), 30)
 
 # create readable number
-
-
 def millify(n):
     if n > 999:
         if n > 1e6-1:
             return f'{round(n/1e6,1)}M'
         return f'{round(n/1e3,1)}K'
     return n
-
-
-# set the date to french format
-locale.setlocale(locale.LC_TIME, "fr_FR")
 
 
 def pretty_date(str_date):
@@ -66,13 +59,10 @@ with open('mapbox_token.txt') as f:
 mapbox_access_token = lines[0]
 
 # DASH APP
-
-
 # added Bootstrap CSS.
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server
-
 
 # filters component
 filters = dbc.Card([
@@ -86,6 +76,7 @@ filters = dbc.Card([
             value=len(df['Date'].unique())-1),
         dcc.Dropdown(
             id='country_dropdown',
+            # label="Menu",
             options=[{'label': country, 'value': country}
                      for country in df['State'].unique()],
             multi=True,
@@ -125,19 +116,19 @@ app.layout = html.Div(
                 dbc.Row(
                     [
                         dbc.Col(
-                            dcc.Tabs(id="tabs", value='Confirmed',
+                            dcc.Tabs(id="tabs", value='Confirmed', 
                                      children=[
                                          dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'rgb(21, 99, 255)'},
-                                                 className='count-card confirmed-case', selected_className='count-selected'),
+                                                 className='count-card confirmed-case', selected_className='count-selected count-selected-case'),
                                          dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'rgb(237, 29, 48)'},
-                                                 className='count-card confirmed-death', selected_className='count-selected')
+                                                 className='count-card confirmed-death', selected_className='count-selected count-selected-death')
                                      ]
                                      ),
-                            className='p-0 tabs'
+                            className='p-0 tabs',
                         ),
-                        dbc.Col(filters, md=6, sm=12)
+                        dbc.Col(filters, md=7, sm=12,)
                     ],
-                    className='h-50 mb-2'
+                    className='h-50 tabs-filter-container'
                 ),
 
                 # Figures
@@ -147,16 +138,7 @@ app.layout = html.Div(
                     [
                         dbc.Row(
                             [
-                                # dbc.Col(
-                                # 	dbc.Card(
-                                #   		[
-                                #   		    dbc.CardHeader("Propagation geograpique de la pandémie"),
-                                #   		    dbc.CardBody(dcc.Graph(id='map_plot', className='map'))
-                                #   		]
-                                # 	),
-                                # 	lg=6
-                                # ),
-                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=6, className='pr-0'),
+                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=5, className='pr-0'),
                                 dbc.Col(
                                     dbc.Row(
                                         [
@@ -169,7 +151,7 @@ app.layout = html.Div(
                                                         dbc.CardBody(
                                                             dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
                                                     ],
-                                                    className='graph-card'),
+                                                    className='graph-card '),
                                                  lg=12
                                             ),
                                             dbc.Col(
@@ -180,28 +162,29 @@ app.layout = html.Div(
                                                         dbc.CardBody(
                                                             dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
                                                     ],
-                                                    className='graph-card'),
+                                                    className='graph-card new-case-card'),
                                                 lg=12
                                             ),
-                                            dbc.Col(
-                                                dbc.Card(
-                                                    [
-                                                        dbc.CardHeader(
-                                                            children='Nouveau cas', id='new_cases_title'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='new_cases', className='new', config=config_dash))
-                                                    ],
-                                                    className='graph-card'),
-                                                lg=12
-                                            )
+
                                         ],
                                         className='graphs'
                                     ),
                                 className='graphs-container p-0',
-                                sm=12, lg=6),
-
+                                sm=12, lg=7),
+                                 dbc.Col(
+                                    dbc.Card(
+                                                [
+                                                    dbc.CardHeader(
+                                                            children='Nouveau cas', id='new_cases_title'),
+                                                        dbc.CardBody(
+                                                            dcc.Graph(id='new_cases', className='new', config=config_dash))
+                                                    ], className='graph-card total-case-card'
+                                                    ),
+                                                
+                                            )
                             ],
-                            className='map-top10-row'
+                            className='map-top10-row',
+                            
                         )
 
                     ],
@@ -223,6 +206,7 @@ app.layout = html.Div(
 
 @app.callback(
     [
+        Output('my_title', 'children'),
         Output('my_date', 'children'),
         Output('tab_conf', 'label'),
         Output('tab_death', 'label'),
@@ -232,7 +216,6 @@ app.layout = html.Div(
         Output('top10', 'figure'),
         Output('total_case_title', 'children'),
         Output('new_cases_title', 'children'),
-        Output('my_title', 'children')
     ],
     [
         Input('date_slider', 'value'),
@@ -241,9 +224,7 @@ app.layout = html.Div(
     ]
 )
 def global_update(slider_date, tabs_type, country_dropdown):
-
-    # 0. Preparation
-
+# 0. Preparation
     # filtre df
     if country_dropdown:
         df1 = pd.DataFrame([])
@@ -253,7 +234,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
         df1.reset_index(inplace=True)
     else:
         df1 = df.copy()
-
     filtred_df = df1[df1['Date'] == df1['Date'][slider_date]]
     slice_df = df1[df1['Date'] <= df1['Date'][slider_date]]
     # total count
@@ -307,7 +287,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
     map_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12), margin=margin,
                            mapbox={'accesstoken': mapbox_access_token, 'zoom': 0.4}, showlegend=False)
 
- # 2. Cases over time
+# 2. Cases over time
     if country_dropdown:
         global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index()
         total_case = go.Figure([go.Scatter(
@@ -387,6 +367,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
 # Output
     output_tuple = (
+        ['Evolution du ', colorized_elm,' à travers le monde'],
         pretty_date(df['Date'][slider_date]),
         f'{millify(confirmed_count)}',
         f'{millify(death_count)}',
@@ -396,7 +377,11 @@ def global_update(slider_date, tabs_type, country_dropdown):
         top10_plot,
         f'Evolution du nombre de {type_value}',
         f'Nouveau {type_value}',
+<<<<<<< HEAD
         ['Evolution du ', colorized_elm,' à travers le monde en', colorized_badge]
+=======
+          
+>>>>>>> color_and_design
     )
     return output_tuple
 
