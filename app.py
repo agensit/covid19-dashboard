@@ -342,11 +342,12 @@ def global_update(slider_date, tabs_type, country_dropdown):
  # 4. Cases over time
     if country_dropdown:
         global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index(level='Date')
+        print(len(global_increase.loc[country_order[0],'Date']))
         total_case = go.Figure([go.Scatter(
-            x=global_increase.loc[country,'Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
-            y=global_increase.loc[country, tabs_type],
-            name=country)
-            for country in country_order])
+            x=global_increase.loc[[c],'Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
+            y=global_increase.loc[[c], tabs_type],
+            name=c)
+            for c in country_order])
     else:
         global_increase = slice_df.groupby('Date').sum().reset_index()
         total_case = go.Figure(go.Scatter(
@@ -366,8 +367,8 @@ def global_update(slider_date, tabs_type, country_dropdown):
         global_diff.loc[global_diff['new_deaths'] < 0,'new_deaths'] = 0
         # plot
         new_cases_plot = go.Figure([go.Bar(
-            x=global_diff.loc[c,'Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
-            y=global_diff.loc[c, new_type],
+            x=global_diff.loc[[c],'Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
+            y=global_diff.loc[[c], new_type],
             name=c)
             for c in country_order])
     else:
