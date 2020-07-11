@@ -377,11 +377,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
         top10_plot,
         f'Evolution du nombre de {type_value}',
         f'Nouveau {type_value}',
-<<<<<<< HEAD
-        ['Evolution du ', colorized_elm,' à travers le monde en', colorized_badge]
-=======
-          
->>>>>>> color_and_design
     )
     return output_tuple
 
