@@ -106,6 +106,7 @@ filters = dbc.Card([
                      for country in df['State'].unique()],
             multi=True,
             value=None,
+            placeholder='Réaliser une étude par pays',
             className='country-dropdown-el')
     ], style={'width': '100%', 'height': '100%', 'padding': '.9rem'})
 ], className='filter-card')
@@ -342,7 +343,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
  # 4. Cases over time
     if country_dropdown:
         global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index(level='Date')
-        print(len(global_increase.loc[country_order[0],'Date']))
         total_case = go.Figure([go.Scatter(
             x=global_increase.loc[[c],'Date'].map(lambda x: pretty_date(x,'%d %B %Y')),
             y=global_increase.loc[[c], tabs_type],
