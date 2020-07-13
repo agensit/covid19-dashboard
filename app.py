@@ -113,105 +113,84 @@ app.layout = html.Div(
     [
         dbc.Container(
             [
-                # Headers
-                dbc.Card(
-                    dbc.Row(
-                        [
-                            html.Div(
-                                children=[
-                                    dbc.Col(html.H1(id='my_title'), sm=12, md=8),
-                                    dbc.Col(html.H2(id='my_date', className='header-date'), sm=12, md=4)
-                                ],
-                                className='header d-flex'
+            # Headers
+            dbc.Card(
+                dbc.Row([html.Div(children=
+                                [
+                                dbc.Col(html.H1(id='my_title'), sm=12, md=8),
+                                dbc.Col(html.H2(id='my_date', className='header-date'), sm=12, md=4)
+                                ],className='header d-flex'
                             )
-                        ],
-                        className='d-flex justify-content-between h-75 align-items-center'
-                    ),
-                    className=' p-3 my-3 w-100 header-container'
+                    ],className='d-flex justify-content-between h-75 align-items-center'
+                    ),className=' p-3 my-3 w-100 header-container'
                 ),
-
-                #Tabs & Filters
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            dcc.Tabs(id="tabs", value='Confirmed', 
-                                     children=[
-                                         dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'rgb(21, 99, 255)'},
-                                                 className='count-card confirmed-case', selected_className='count-selected count-selected-case'),
-                                         dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'rgb(237, 29, 48)'},
-                                                 className='count-card confirmed-death', selected_className='count-selected count-selected-death')
-                                     ]
+            #Tabs & Filters
+            dbc.Row([dbc.Col(dcc.Tabs(id="tabs", value='Confirmed', children=
+                            [
+                            dcc.Tab(id='tab_conf', label=f'{confirmed_count}', value='Confirmed', style={'color': 'rgb(21, 99, 255)'},
+                            className='count-card confirmed-case', selected_className='count-selected count-selected-case'),
+                            dcc.Tab(id='tab_death', label=f'{death_count}', value='Death', style={'color': 'rgb(237, 29, 48)'},
+                            className='count-card confirmed-death', selected_className='count-selected count-selected-death')
+                            ]
                                      ),
                             className='p-0 tabs',
-                        ),
-                        dbc.Col(filters, md=7, sm=12,)
+                            ), 
+                    dbc.Col(filters, md=7, sm=12,)
                     ],
-                    className='h-50 tabs-filter-container'
-                ),
+                    className='h-50 tabs-filter-container'),
 
-                # Figures
-                html.Div(
-                    children=[
-                               dbc.Row(
+            # Figures
+            html.Div(
+                children=[dbc.Row(
                     [
-                        dbc.Row(
-                            [
-                                dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=5, className='pr-0'),
-                                dbc.Col(
+                    dbc.Row([
+                            dbc.Col(dcc.Graph(id='map_plot',className='map', config={'displayModeBar': False}),lg=5, className='pr-0'),
+                            dbc.Col(
                                     dbc.Row(
+                                [
+                                dbc.Col(
+                                dbc.Card(
                                         [
+                                        dbc.CardHeader('Pays les plus touchés'),
+                                        dbc.CardBody(
+                                        dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
+                                        ],className='graph-card '),
+                                        lg=12
+                                        ),
+                                dbc.Col(
+                                dbc.Card(
+                                            [
+                                        dbc.CardHeader(
+                                        children='Evolution du nombre de cas', id='total_case_title'),
+                                         dbc.CardBody(
+                                         dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
+                                         ],className='graph-card new-case-card'),
+                                         lg=12
+                                        ),
 
-                                            dbc.Col(
-                                                dbc.Card(
-                                                    [
-                                                        dbc.CardHeader(
-                                                            'Pays les plus touchés'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
-                                                    ],
-                                                    className='graph-card '),
-                                                 lg=12
-                                            ),
-                                            dbc.Col(
-                                                dbc.Card(
-                                                    [
-                                                        dbc.CardHeader(
-                                                            children='Evolution du nombre de cas', id='total_case_title'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
-                                                    ],
-                                                    className='graph-card new-case-card'),
-                                                lg=12
-                                            ),
-
-                                        ],
-                                        className='graphs'
+                                ],className='graphs'
                                     ),
                                 className='graphs-container p-0',
                                 sm=12, lg=7),
                                  dbc.Col(
                                     dbc.Card(
-                                                [
-                                                    dbc.CardHeader(
-                                                            children='Nouveau cas', id='new_cases_title'),
-                                                        dbc.CardBody(
-                                                            dcc.Graph(id='new_cases', className='new', config=config_dash))
-                                                    ], className='graph-card total-case-card'
-                                                    ),
+                                        [
+                                            dbc.CardHeader(
+                                                children='Nouveau cas', id='new_cases_title'),
+                                            dbc.CardBody(
+                                                dcc.Graph(id='new_cases', className='new', config=config_dash))
+                                        ], className='graph-card total-case-card'
+                                            ),
                                                 
-                                            )
-                            ],
-                            className='map-top10-row',
-                            
-                        )
-
+                                        )
+                            ],className='map-top10-row',
+                            )
                     ],
                     className='px-3 map-graph-row'
                 ),
-                    ],
+                        ],
                     className='data-display'
                 )
-         
             ],
             fluid=True,
         className='main-container'),
@@ -310,7 +289,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
                            mapbox={'zoom':0.4, 'accesstoken': mapbox_access_token}, showlegend=False)
 # 3. Top 10
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()
-    top10 = top10.nlargest(10, tabs_type)
+    top10 = top10.nlargest(5, tabs_type)
     top10.sort_values(tabs_type, inplace=True)
     if country_dropdown:
         top10.set_index('State',inplace=True)
