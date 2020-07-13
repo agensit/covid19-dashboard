@@ -23,9 +23,7 @@ margin = dict(l=0, r=0, t=0, b=0)
 import locale
 locale.setlocale(locale.LC_TIME, "fr_FR")
 
-# need to be delete
-df = pd.read_csv('databasefr.csv')
-df.drop(columns=['Country/Region', 'Recovered','Province/State'], inplace=True)
+df = pd.read_csv('collect_data/df_covid19.csv')
 
 # create the counter
 last_date = df['Date'].max()
@@ -288,7 +286,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
             lon=[df_map.loc[c,'Long']],
             customdata=[c],
             text=[millify(df_map.loc[c,tabs_type])],
-            marker=dict(size=[df_map.loc[c,f'marker_{tabs_type}'] * 2], sizemin=3, sizeref=8),
+            marker=dict(size=[df_map.loc[c,f'marker_{tabs_type}']], sizemin=3, sizeref=8),
             hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>')
             for c in country_order])
         # map_plot.update_layout(mapbox={'zoom': zoom_size, 'center':dict(lat=mean_lat, lon=mean_lon)})
