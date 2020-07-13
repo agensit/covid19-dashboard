@@ -163,7 +163,7 @@ map & graph display style
 }
 
 .graph-card{
-    height: 250px;
+    height: 200px;
     width: 100%;
 }
 
@@ -180,7 +180,7 @@ map & graph display style
 
 .map{
     margin-top: 1.2rem;
-    height: 500px;
+    height: 405px;
     width: 100%;
 }
 
