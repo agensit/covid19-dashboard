@@ -109,6 +109,8 @@ filters = dbc.Card([
     ], style={'width': '100%', 'height': '100%', 'padding': '.9rem'})
 ], className='filter-card')
 
+# layout and DASH components display
+
 app.layout = html.Div(
     [
         dbc.Container(
