@@ -13,7 +13,6 @@ import dash_html_components as html
 from dash.dependencies import Output, Input
 
 # config dash & plotly
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP]) # added Bootstrap CSS.
 import plotly.io as pio
 pio.templates.default = "plotly_white"
 config_dash = {'displayModeBar': False}
@@ -52,38 +51,10 @@ with open('mapbox_token.txt') as f:
     lines = [x.rstrip() for x in f]
 mapbox_access_token = lines[0]
 
+# External CSS + Dash Bootstrap components
+external_stylesheets=[dbc.themes.BOOTSTRAP, "assets/main.css"]
 # DASH APP
-# added Bootstrap CSS.
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-# #### TEST
-# import itertools 
-
-# def find_pairs(lst):
-#     return [(a,b) for a,b in itertools.permutations(lst, 2)]
-
-# def dist(df, c1,c2):
-#     dff = df#.set_index('State')
-#     diff_lat = dff.loc[c1,'Lat'] - dff.loc[c2,'Lat']
-#     diff_long =  dff.loc[c1,'Long'] - dff.loc[c2,'Long']
-#     return np.sqrt(diff_lat ** 2 + diff_long ** 2)   
-
-# def get_max_dist(df, country_list):
-#     country_pairs = find_pairs(country_list)
-#     country_dist = []
-#     for pair in country_pairs:
-#         country_dist.append(dist(df, pair[0], pair[1]))
-#     if len(country_pairs) > 0: 
-#         return max(country_dist)
-#     else:
-#         return 1
-
-# # custom buckets
-# bins = [0, 10.3, 33.8, 79.8, 98.3, np.inf]
-# groups_names = [5, 4, 3, 2, 1]
-# def binning(df, country_list):
-#     dist = get_max_dist(df ,country_list)
-#     return pd.cut([dist], bins, labels=groups_names).tolist()
-# ####
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 server = app.server
 
