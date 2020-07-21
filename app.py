@@ -30,8 +30,6 @@ last_date = df['Date'].max()
 confirmed_count = df[df['Date'] == last_date]['Confirmed'].sum()
 death_count = df[df['Date'] == last_date]['Death'].sum()
 
-
-
 # map markers' size
 df['marker_Confirmed'] = df['Confirmed'].map(lambda x: x ** 0.4)
 df['marker_Death'] = df['Death'].map(lambda x: x ** 0.4)
@@ -55,36 +53,6 @@ mapbox_access_token = lines[0]
 # DASH APP
 # added Bootstrap CSS.
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-# #### TEST
-# import itertools 
-
-# def find_pairs(lst):
-#     return [(a,b) for a,b in itertools.permutations(lst, 2)]
-
-# def dist(df, c1,c2):
-#     dff = df#.set_index('State')
-#     diff_lat = dff.loc[c1,'Lat'] - dff.loc[c2,'Lat']
-#     diff_long =  dff.loc[c1,'Long'] - dff.loc[c2,'Long']
-#     return np.sqrt(diff_lat ** 2 + diff_long ** 2)   
-
-# def get_max_dist(df, country_list):
-#     country_pairs = find_pairs(country_list)
-#     country_dist = []
-#     for pair in country_pairs:
-#         country_dist.append(dist(df, pair[0], pair[1]))
-#     if len(country_pairs) > 0: 
-#         return max(country_dist)
-#     else:
-#         return 1
-
-# # custom buckets
-# bins = [0, 10.3, 33.8, 79.8, 98.3, np.inf]
-# groups_names = [5, 4, 3, 2, 1]
-# def binning(df, country_list):
-#     dist = get_max_dist(df ,country_list)
-#     return pd.cut([dist], bins, labels=groups_names).tolist()
-# ####
-
 server = app.server
 
 # filters component
@@ -254,23 +222,18 @@ def global_update(slider_date, tabs_type, country_dropdown):
     death_count = filtred_df['Death'].sum()
     
 # 2. MAP
-    if country_dropdown:
+    if country_dropdown: 
         df_map = filtred_df[filtred_df['Death']>0].set_index('State')
         df_map = filtred_df.set_index('State')
-        # zoom adjustment
-        # mean_lat = df_map['Lat'].mean()
-        # mean_lon = df_map['Long'].mean()
-        # zoom_size= binning(df_map, country_dropdown)[0] - 1
         # plot
         map_plot = go.Figure([go.Scattermapbox(
             lat=[df_map.loc[c,'Lat']],
             lon=[df_map.loc[c,'Long']],
-            customdata=[c],
-            text=[millify(df_map.loc[c,tabs_type])],
+            text=[c],
+            customdata=[df_map.loc[c,tabs_type]],
             marker=dict(size=[df_map.loc[c,f'marker_{tabs_type}']], sizemin=3, sizeref=8),
-            hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>')
+            hovertemplate='<b>%{text}</b><br>' + '%{customdata:.3s}' + f' {type_value}' '<extra></extra>')
             for c in country_order])
-        # map_plot.update_layout(mapbox={'zoom': zoom_size, 'center':dict(lat=mean_lat, lon=mean_lon)})
     else:
         if tabs_type == 'Death':
             df_map = filtred_df[filtred_df['Death']>0] 
@@ -280,15 +243,14 @@ def global_update(slider_date, tabs_type, country_dropdown):
         map_plot = go.Figure(go.Scattermapbox(
             lat=df_map['Lat'],
             lon=df_map['Long'],
-            customdata=df_map['State'], 
-            text=df_map[tabs_type].map(lambda x: millify(x)),
+            customdata=df_map[tabs_type], 
+            text=df_map['State'],
             marker_color=marker_color,
             marker=dict(size=df_map[f'marker_{tabs_type}'],sizemin=2, sizeref=8),
-            hovertemplate='<b>%{customdata}</b><br>' + '%{text}' + f' {type_value}' '<extra></extra>'))
-        # map_plot.update_layout(mapbox={'zoom': 0.4}) 
-
+            hovertemplate='<b>%{text}</b><br>' + '%{customdata:.3s}' + f' {type_value}' '<extra></extra>'))
     map_plot.update_layout(hoverlabel=dict(bgcolor="white", font_size=12), margin=margin,
                            mapbox={'zoom':0.4, 'accesstoken': mapbox_access_token}, showlegend=False)
+
 # 3. Top 10
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()
     top10 = top10.nlargest(5, tabs_type)
@@ -303,7 +265,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
             textposition='outside',
             hovertemplate='%{text:.2s}' + f' {type_value}'+'<extra></extra>',
             orientation='h')
-            for c in country_order])
+            for c in top10.index.unique()])
     else:
         # plot
         top10_plot = go.Figure(go.Bar(
