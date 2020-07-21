@@ -43,4 +43,4 @@ df_covid19['State'] = df_covid19['Province/State'].map(lambda x: french_countrie
 df_covid19.drop(columns=['Country/Region', 'Province/State'], inplace=True)
 
 # save 
-df_covid19.to_csv("'/tmp/df_covid19.csv", index=False)
+df_covid19.to_csv("/Users/axel/Agensit/covid19/collect_data/df_covid19.csv", index=False)
