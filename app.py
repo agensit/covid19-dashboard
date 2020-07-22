@@ -90,7 +90,7 @@ app.layout = html.Div(
             dbc.Card(
                 dbc.Row([html.Div(children=
                                 [
-                                dbc.Col(html.H1(id='my_title'), sm=12, md=8),
+                                dbc.Col(html.H1(id='my_title', className="title"), sm=12, md=8),
                                 dbc.Col(html.H2(id='my_date', className='header-date'), sm=12, md=4)
                                 ],className='header d-flex'
                             )
