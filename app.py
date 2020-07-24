@@ -19,8 +19,8 @@ config_dash = {'displayModeBar': False, 'showAxisDragHandles':False} # responsiv
 margin = dict(l=0, r=0, t=0, b=0)
 
 # set the date to french format
-import locale
-locale.setlocale(locale.LC_TIME, "fr_FR")
+# import locale
+# locale.setlocale(locale.LC_TIME, "fr_FR")
 
 df = pd.read_csv('collect_data/df_covid19.csv')
 
