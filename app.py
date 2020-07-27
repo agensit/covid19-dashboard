@@ -15,7 +15,7 @@ from dash.dependencies import Output, Input
 # config dash & plotly
 import plotly.io as pio
 pio.templates.default = "plotly_white"
-config_dash = {'displayModeBar': False, 'showAxisDragHandles':False} # responsive=True
+config_dash = {'displayModeBar': False, 'showAxisDragHandles':False, 'responsive':True } #responsive=True
 margin = dict(l=0, r=0, t=0, b=0)
 
 # set the date to french format
@@ -54,6 +54,7 @@ external_stylesheets=[dbc.themes.BOOTSTRAP, "assets/main.css"]
 
 # DASH APP
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
 server = app.server
 # filters component
 filters = dbc.Card([
@@ -88,9 +89,9 @@ app.layout = html.Div(
                                 [
                                 dbc.Col(html.H1(id='my_title', className="title"), sm=12, md=8),
                                 dbc.Col(html.H2(id='my_date', className='header-date'), sm=12, md=4)
-                                ],className='header d-flex'
+                                ],className='header'
                             )
-                    ],className='d-flex justify-content-between h-75 align-items-center'
+                    ],className='d-flex justify-content-between h-100 align-items-center'
                     ),className=' p-3 my-3 w-100 header-container'
                 ),
             #Tabs & Filters
@@ -102,72 +103,40 @@ app.layout = html.Div(
                             className='count-card confirmed-death', selected_className='count-selected count-selected-death')
                             ]
                                      ),
-                            className='p-0 tabs',
+                            className='tabs',
                             ), 
-                    dbc.Col(filters, md=7, sm=12,)
+                    dbc.Col(filters, lg=7, sm=12,)
                     ],
-                    className='h-50 tabs-filter-container'),
-
-            # Figures
-            html.Div(
-                children=[dbc.Row(
-                    [
-                    dbc.Row([
-                            dbc.Col(dcc.Graph(id='map_plot',className='map', config=config_dash),lg=5, className='pr-0'),
-                            dbc.Col(
-                                    dbc.Row(
-                                [
-                                dbc.Col(
-                                dbc.Card(
-                                        [
-                                        dbc.CardHeader('Pays les plus touchés'),
-                                        dbc.CardBody(
-                                        dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
-                                        ],className='graph-card '),
-                                        lg=12
-                                        ),
-                                dbc.Col(
-                                dbc.Card(
-                                            [
-                                        dbc.CardHeader(
-                                        children='Evolution du nombre de cas', id='total_case_title'),
-                                         dbc.CardBody(
-                                         dcc.Graph(id='total_case_plot', className='total_case_plot',config=config_dash))
-                                         ],className='graph-card new-case-card'),
-                                         lg=12
-                                        ),
-
-                                ],className='graphs'
-                                    ),
-                                className='graphs-container p-0',
-                                sm=12, lg=7),
-                                 dbc.Col(
-                                    dbc.Card(
-                                        [
-                                            dbc.CardHeader(
-                                                children='Nouveau cas', id='new_cases_title'),
-                                            dbc.CardBody(
-                                                dcc.Graph(id='new_cases', className='new', config=config_dash))
-                                        ], className='graph-card total-case-card'
-                                            ),
-                                                
-                                        )
-                            ],className='map-top10-row',
-                            )
-                    ],
-                    className='px-3 map-graph-row'
+                    className='h-50 tabs-filter-container'
                 ),
-                        ],
-                    className='data-display'
-                )
+            #Figures
+                dbc.Row([
+                    dbc.Col(dcc.Graph(id='map_plot', className='map', config=config_dash), sm=9, lg=5, className="mx-auto"),
+                    dbc.Col(html.Div([
+                                dbc.Card([
+                                    dbc.CardHeader(children='Nouveau cas', id='new_cases_title'),
+                                    dbc.CardBody(dcc.Graph(id='new_cases', className='new', config=config_dash)),
+                                ],className='graph-card new-case-card'),
+                                dbc.Card([
+                                    dbc.CardHeader(children='Nouveau cas', id='total_case_title'),
+                                    dbc.CardBody(dcc.Graph(id='total_case_plot', className='new', config=config_dash)),
+                                ],className='graph-card total-case-card'),
+                                
+                                ]),
+                            sm=12, lg=7),
+                    dbc.Col(dbc.Card([
+                        dbc.CardHeader('Pays les plus touchés'),
+                        dbc.CardBody(dcc.Graph(id='top10', className='top-10-graph', config=config_dash))
+                        ],className='graph-card top-10-card'),lg=12),
+                ], id="graph-display"),
             ],
             fluid=True,
-        className='main-container'),
-        # Footer
-        html.Footer(
+            className='main-container'),
+            # Footer
+            html.Footer(
             children=[html.P(children='©️2020 Agensit')], className='footer')
-    ]
-)
+        ])
+
 
 @app.callback(
     [
