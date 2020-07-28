@@ -3,14 +3,11 @@
 body{
     background-color: #EDF2F3;
     overflow-x: hidden;
-    height: 100vh!important;
-    
 }
 
 /* principal container for all display*/
 
 .main-container{
-    max-width: 1800px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -127,10 +124,6 @@ body{
     background-color: rgb(237, 29, 48)!important;
 }
 
-
-
-
-
 /*
 filter card style 
 */
@@ -240,7 +233,6 @@ map & graph display style
 @media screen and (max-width: 800px) {
 
     .main-container{
-        height: 100vh;
         width: 100%;
         display: block;
         margin: auto;
@@ -312,7 +304,7 @@ map & graph display style
 
     .graph-card{
         margin-top: 2rem;
-        height: 30vh;
+        height: 600px;
         width: 100%;
     }
    

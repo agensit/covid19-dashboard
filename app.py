@@ -81,7 +81,8 @@ filters = dbc.Card([
 
 app.layout = html.Div(
     [
-        dbc.Container(
+        dbc.Container
+        (
             [
             # Headers
             dbc.Card(
@@ -131,11 +132,13 @@ app.layout = html.Div(
                 ], id="graph-display"),
             ],
             fluid=True,
-            className='main-container'),
+            className='main-container'
+            
+        ),
             # Footer
             html.Footer(
             children=[html.P(children='©️2020 Agensit')], className='footer')
-        ])
+    ])
 
 
 @app.callback(
