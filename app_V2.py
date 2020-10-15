@@ -54,6 +54,7 @@ def format_date(str_date, date_format):
 ## Colors 
 red = '#ed1d30'
 blue = '#2e72ff'
+grey = "#6c757d"
 
 '''
    ------------------------------------------------------------------------------------------- 
@@ -78,10 +79,10 @@ death_counter = covid19.loc[covid19['Date'] == last_date, 'Death'].sum()
 ## HEADERS 
 #-------------------------------------------------------------------------------------------------------
 header = dbc.Row(
-    children = [dbc.Col(html.H2(id='my_title'), width =9), dbc.Col(html.H4(id='my_date'), width=3)],
-    align = "end",
+    children = [dbc.Col(html.H2(id='my_title'), width =9), dbc.Col(html.H4(id='my_date'), width=3,)],
+    align = "center",
     justify = 'between',
-    className = 'mt-2 mb-0')
+    className = 'm-2')
 
 ## FILTERS
 #-------------------------------------------------------------------------------------------------------
@@ -93,7 +94,7 @@ slider = dcc.RangeSlider(
     max = len(dates)-1,
     marks = {i: format_date(date,'%B').title() for i, date in enumerate(dates) if parse(date).day == 1},
     value = [0, len(dates) - 1],
-    className ='mt-3 mb-3')
+    className = "my-3") 
 
 # dropdown
 dropdown = dcc.Dropdown(
@@ -102,7 +103,7 @@ dropdown = dcc.Dropdown(
         multi = True,
         value = None,
         placeholder = 'Choisir un pays',
-        className = 'mb-3 ml-2 mr-2')
+        className = "my-3 mx-2") 
 
 # tabs
 tabs = dcc.Tabs(
@@ -115,7 +116,8 @@ tabs = dcc.Tabs(
             value = 'Confirmed', 
             style = {'color': blue},
             className = 'count-card confirmed-case', 
-            selected_className = 'count-selected count-selected-case'),
+            selected_className = 'count-selected count-selected-case'
+            ),
         dcc.Tab(
             id = 'tab_death', 
             label = f'{death_counter}', 
@@ -128,16 +130,19 @@ tabs = dcc.Tabs(
 # Global filters (tabs + slider + dropdown)
 filters = dbc.Row(
     [
-        dbc.Col(tabs, className='mr-3'), 
-        dbc.Col(dbc.Card([slider, dropdown]))
+        dbc.Col(tabs, className="mr-4"), 
+        dbc.Col(html.Div([slider, dropdown], style = {"background-color":"white"}, className="border ml-2"))
     ],
-    no_gutters=True,
-    align="center"),
+    no_gutters = True,
+    className = "m-3",
+    align = "top"),
 
 ## FIGURES
 #-------------------------------------------------------------------------------------------------------
 # Map
-card1 = du.Card(Id="map_plot", title="zo", zoom=False, tooltip="test", dash_config={**config_dash, **{'scrollZoom':False}})
+remove_buton = ["resetViewMapbox", "", "toImage", "", "", "toggleHover"]
+dash_config = {'modeBarButtonsToRemove': remove_buton , 'showAxisDragHandles':False, "displayModeBar":True, "displaylogo": False}
+card1 = du.Card(Id="map_plot", zoom=False, tooltip="test", dash_config=dash_config )
 card1.format(row_number=1, width=6)
 
 # total cases
@@ -171,6 +176,18 @@ app.layout = container
                                             INTERACT
    ------------------------------------------------------------------------------------------- 
 '''
+@app.callback(
+    Output('country_dropdown', 'value'),
+    [Input('map_plot', 'clickData'), Input('map_plot', 'selectedData')]
+)
+
+def update_dropwdown(click, selected):
+    countries = []
+    if click:
+        countries.append(click["points"][0]["text"])
+    if selected:
+        countries.extend(country["text"] for country in selected["points"])
+    return countries
 
 @app.callback(
     [
@@ -188,19 +205,24 @@ app.layout = container
     [
         Input('date_slider', 'value'),
         Input('tabs', 'value'),
-        Input('country_dropdown', 'value')
+        Input('country_dropdown', 'value'),
     ]
 )
 
 def global_update(slider_date, tabs_type, country_dropdown):
 
-# 0. DESIGN
-# --------------------------------------------------------
+
+
+    # 0. DESIGN
+    # --------------------------------------------------------
     # date panel (top - right)
     starting_date = covid19['Date'][slider_date[0]]
     ending_date = covid19['Date'][slider_date[1]]
     min_date_panel = format_date(starting_date , '%d %B')
     max_date_panel = format_date(ending_date, '%d %B %Y')
+
+    if not country_dropdown:
+        country_dropdown = None
 
     # color and french legend
     if tabs_type == 'Death':
@@ -211,15 +233,14 @@ def global_update(slider_date, tabs_type, country_dropdown):
         type_value = 'cas'
     colorized_elm = html.Span(children='COVID-19', style={'color': marker_color})
 
-# 1. PREPARATION
-# --------------------------------------------------------
+    # 1. PREPARATION
+    # --------------------------------------------------------
     # filtre by country
     # -----------------
-    if country_dropdown:
-        df = covid19[covid19['State'].isin(country_dropdown)].reset_index(drop=True)
-    else:
-        df = covid19.copy()
-    
+    df = covid19.copy()
+    # delete negative death values
+    # ------
+
     # filtre by date
     # --------------
     min_range_slider = df.loc[df['Date'] == starting_date].reset_index(drop=True)
@@ -234,80 +255,67 @@ def global_update(slider_date, tabs_type, country_dropdown):
     slice_df = df[df['Date'] <= df['Date'][slider_date[1]]]
     slice_df = slice_df[slice_df['Date'] >= slice_df['Date'][slider_date[0]]].reset_index(drop=True)
 
+
     # key values
     # ----------
     cases_counter = filtred_df['Confirmed'].sum()
     death_counter = filtred_df['Death'].sum()
-
-    if country_dropdown:
-        country_order = slice_df.groupby('State').sum().sort_values(by=tabs_type).index
     
-# 2. MAP
-# --------------------------------------------------------
+    # 2. MAP
+    # --------------------------------------------------------
     df_map = filtred_df.copy()
-    # filtering by country
-    if country_dropdown: 
-        df_map = filtred_df[filtred_df['Death']>0].set_index('State')
-        df_map = filtred_df.set_index('State')
-        map_plot = go.Figure()
-        for c in country_order:
-            map_plot.add_traces(
-                go.Scattermapbox(
-                    lat = df_map.loc[c,['Lat']],
-                    lon = df_map.loc[c,['Long']],
-                    text = [c],
-                    customdata = np.dstack((df_map.loc[c,'Confirmed'],df_map.loc[c,'Death']))[0],
-                    marker = dict(size = 10),
-                    hovertemplate = '<b>%{text}</b><br><br>' + '%{customdata[0]:.3s} cas<br>' + '%{customdata[1]:.3s} morts<extra></extra>'
-                )
-            )
-    # global cases
-    else:
-        # hide no death in map when you filter by death 
-        if tabs_type == 'Death':
-            df_map = filtred_df[filtred_df['Death']>0] 
+    df_map["color"] = [blue] * len(df_map) if tabs_type == 'Confirmed' else [red] * len(df_map)
 
-        # set the marker size
-        bubble_size = df_map.set_index('State')[tabs_type]
-        bubble_size[bubble_size < 0] = 0
-        # plot
-        map_plot = go.Figure(
-            go.Scattermapbox(
-                lat = df_map['Lat'],
-                lon = df_map['Long'],
-                customdata = np.dstack((df_map['Confirmed'],df_map['Death']))[0], 
-                text = df_map['State'],
-                marker_color = marker_color,
-                marker = dict(
-                    size =  bubble_size,
-                    sizemode = 'area',
-                    sizemin = 1, 
-                    sizeref = 2. * max(bubble_size) / (40.**2),
-                ),
-                hovertemplate='<b>%{text}</b><br><br>' + '%{customdata[0]:.3s} cas<br>' + '%{customdata[1]:.3s} morts<extra></extra>'
-            )
+    # hiligh select country 
+    if country_dropdown:
+        df_map["color"] = np.array([grey]* len(df_map)) 
+        df_map.loc[df_map["State"].isin(country_dropdown), "color"] = marker_color
+
+    # set the marker size
+    bubble_size = df_map.set_index('State')[tabs_type]
+    bubble_size[bubble_size < 0] = 0
+    # plot
+    map_plot = go.Figure(
+        go.Scattermapbox(
+            lat = df_map['Lat'],
+            lon = df_map['Long'],
+            customdata = np.dstack((df_map['Confirmed'],df_map['Death']))[0], 
+            text = df_map['State'],
+            marker = dict(
+                color = df_map["color"],
+                size =  bubble_size,
+                sizemode = 'area',
+                sizemin = 2, 
+                sizeref = 2. * max(bubble_size) / (40.**2),
+            ),
+            hovertemplate='<b>%{text}</b><br><br>' + '%{customdata[0]:.3s} cas<br>' + '%{customdata[1]:.3s} morts<extra></extra>'
         )
+    )
 
     # figure design
     map_plot.update_layout(
-        hoverlabel = dict(
-            bgcolor = "white", 
-            font_size = 12), 
+        hoverlabel = dict( bgcolor = "white", font_size = 12), 
         margin = margin,
+        # uirevision = 2,
         mapbox = dict(
             zoom = 0, 
             style = 'mapbox://styles/axelitorosalito/ckdyhbsb93rp719mwude0ze6j',
-            center = go.layout.mapbox.Center(
-                lat = 30,
-                lon = 0
-            ),
+            # center = go.layout.mapbox.Center(lat = 30, lon = 0),
             accesstoken = mapbox_access_token
         ), 
         showlegend = False
     )
+    print(map_plot["layout"]["uirevision"])
+    # interactive map's selection
+    # --------------------------------------------------------
+    if country_dropdown:
+        filtred_df = filtred_df[filtred_df["State"].isin(country_dropdown)]
+        slice_df = slice_df[slice_df["State"].isin(country_dropdown)]
+        country_order = slice_df.groupby('State').sum().sort_values(by=tabs_type).index
 
-# 3. Top 10
-# --------------------------------------------------------
+
+    # 3. Top 10
+    # --------------------------------------------------------
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()
     if country_dropdown:
         top10 = top10.nlargest(len(country_dropdown), tabs_type)
@@ -333,13 +341,13 @@ def global_update(slider_date, tabs_type, country_dropdown):
             hovertemplate='%{customdata[0]:.3s} cas<br>' +
             '%{customdata[1]:.3s} morts <extra></extra>',
             marker_color=marker_color))
-    top10_plot.update_layout(hovermode="y unified", showlegend=False, margin= margin)
+    top10_plot.update_layout(hovermode="y unified", showlegend=False, margin= dict(l=10, r=100, t=10, b=10))
     top10_plot.update_traces(texttemplate='%{customdata[0]:.3s}', textposition='outside', orientation='h')
     top10_plot.update_xaxes(showgrid=False, showticklabels=False)
     top10_plot.update_yaxes(linewidth=0.5, linecolor='black')
 
-# 4. Cases over time
-# --------------------------------------------------------
+    # 4. Cases over time
+    # --------------------------------------------------------
     # filtering by country
     if country_dropdown:
         global_increase = slice_df.groupby(['Date', 'State']).sum().reset_index(level='Date')
@@ -365,14 +373,13 @@ def global_update(slider_date, tabs_type, country_dropdown):
                 marker_color = marker_color
             )
         )
-
     # figure design
     total_case.update_yaxes(showline=True, nticks=5)
     total_case.update_xaxes(showline=False, nticks=5, showgrid=True)
     total_case.update_layout(hovermode="x unified", margin=margin, showlegend=False)
 
-# 5. Daily Cases
-# --------------------------------------------------------
+    # 5. Daily Cases
+    # --------------------------------------------------------
     # create 'new_cases' and 'new_deaths'
     daily_cases = slice_df.copy()
     columns = ['Confirmed', 'Death']
@@ -424,8 +431,8 @@ def global_update(slider_date, tabs_type, country_dropdown):
     new_cases_plot.update_xaxes(showline=True, nticks=5, showgrid=True, zeroline=False)
     new_cases_plot.update_layout(hovermode="x unified", showlegend=False, margin=margin)
 
-# 6. Output
-# --------------------------------------------------------
+    # 6. Output
+    # --------------------------------------------------------
     output_tuple = (
         ['Evolution du ', colorized_elm,' à travers le monde'],
         '{} au {}'.format(min_date_panel, max_date_panel),

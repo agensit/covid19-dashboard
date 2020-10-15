@@ -41,18 +41,19 @@ class Card:
 # ------------
 ##  Attributes
 # ------------
-    def __init__(self, Id=None, graph=None, title=None, tooltip=None, zoom = False,  dash_config={'displayModeBar': False, 'showAxisDragHandles':False, 'responsive':True}):
+    def __init__(self, Id=None, graph=None, title=None, tooltip=None, zoom = False,  dash_config={'displayModeBar': False, 'showAxisDragHandles':False}):
         #  graph
-        self.graph = dcc.Graph(figure=graph, config=dash_config, style={"width":"100%"})
-        self.graph.id = Id
+        self.graph = dcc.Graph(config=dash_config, style={"width":"100%"})
+        if Id:
+            self.graph.id = Id
+        if graph:
+            self.graph.figure = graph
         # header
         self.header = []
         self.title = title
         self.tooltip = self.create_tooltip(tooltip) if tooltip else None
         
         self.zoom = self.create_modal() if zoom else None 
-
-        
 
         # format
         self.width = True # default
