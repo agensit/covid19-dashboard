@@ -176,18 +176,33 @@ app.layout = container
                                             INTERACT
    ------------------------------------------------------------------------------------------- 
 '''
+import collections 
+clicked_country = [] 
+
 @app.callback(
     Output('country_dropdown', 'value'),
     [Input('map_plot', 'clickData'), Input('map_plot', 'selectedData')]
 )
 
 def update_dropwdown(click, selected):
-    countries = []
-    if click:
-        countries.append(click["points"][0]["text"])
-    if selected:
-        countries.extend(country["text"] for country in selected["points"])
-    return countries
+    context = dash.callback_context
+    condition = context.triggered[0]["prop_id"].split(".")[-1]
+    global clicked_country 
+
+    if condition == "clickData":
+        clicked_country.append(click["points"][0]["text"])
+        # delete the duplicate clicked countries
+        clicked_country = [country for country, count in collections.Counter(clicked_country).items() if count<=1]
+        # print(clicked_country) # debug
+        return clicked_country 
+
+    if condition == "selectedData":
+        return [country["text"] for country in selected["points"]] 
+    # reset the list
+    # print("Clear the clicked_country list") # debug
+    clicked_country = []
+    return None
+
 
 @app.callback(
     [
@@ -210,9 +225,6 @@ def update_dropwdown(click, selected):
 )
 
 def global_update(slider_date, tabs_type, country_dropdown):
-
-
-
     # 0. DESIGN
     # --------------------------------------------------------
     # date panel (top - right)
@@ -220,9 +232,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
     ending_date = covid19['Date'][slider_date[1]]
     min_date_panel = format_date(starting_date , '%d %B')
     max_date_panel = format_date(ending_date, '%d %B %Y')
-
-    if not country_dropdown:
-        country_dropdown = None
 
     # color and french legend
     if tabs_type == 'Death':
@@ -235,14 +244,17 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
     # 1. PREPARATION
     # --------------------------------------------------------
+    # link clicked country and country dropdown to have a smooth interactive clicking map
+    global clicked_country
+    clicked_country = country_dropdown
+    if not clicked_country: 
+        clicked_country = []
     # filtre by country
-    # -----------------
     df = covid19.copy()
-    # delete negative death values
-    # ------
+
+    # TODO: delete negative death values
 
     # filtre by date
-    # --------------
     min_range_slider = df.loc[df['Date'] == starting_date].reset_index(drop=True)
     max_range_slider = df[df['Date'] == ending_date].reset_index(drop=True)
 
@@ -257,7 +269,6 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
 
     # key values
-    # ----------
     cases_counter = filtred_df['Confirmed'].sum()
     death_counter = filtred_df['Death'].sum()
     
@@ -305,8 +316,9 @@ def global_update(slider_date, tabs_type, country_dropdown):
         ), 
         showlegend = False
     )
-    print(map_plot["layout"]["uirevision"])
-    # interactive map's selection
+
+
+    # Filtering by the interactive map's selection
     # --------------------------------------------------------
     if country_dropdown:
         filtred_df = filtred_df[filtred_df["State"].isin(country_dropdown)]
