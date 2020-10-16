@@ -41,11 +41,14 @@ locale.setlocale(locale.LC_TIME, "fr_FR")
 
 ## READ BIG NUMBER
 def millify(n):
-    if n > 999:
-        if n > 1e6-1:
-            return f'{round(n/1e6,1)}M'
-        return f'{round(n/1e3,1)}K'
-    return n
+    if n:
+        if n > 999:
+            if n > 1e6-1:
+                return f'{round(n/1e6,2)}M'
+            return f'{round(n/1e3,2)}K'
+        return n
+    else:
+        return None
 
 def format_date(str_date, date_format):
     date = parse(str_date)
@@ -69,6 +72,11 @@ dates = covid19['Date'].unique()
 last_date = dates.max()
 cases_counter = covid19.loc[covid19['Date'] == last_date, 'Confirmed'].sum()
 death_counter = covid19.loc[covid19['Date'] == last_date, 'Death'].sum()
+
+
+colors = px.colors.qualitative.Plotly
+# len(colors map) > len(countries)  +> not be out of range (len(countries)/len(colors)+1
+colors = px.colors.qualitative.Plotly * int(len(countries)/len(colors)+1)
 
 
 '''------------------------------------------------------------------------------------------- 
@@ -142,19 +150,24 @@ filters = dbc.Row(
 # Map
 remove_buton = ["resetViewMapbox", "", "toImage", "", "", "toggleHover"]
 dash_config = {'modeBarButtonsToRemove': remove_buton , 'showAxisDragHandles':False, "displayModeBar":True, "displaylogo": False}
-card1 = du.Card(Id="map_plot", zoom=False, tooltip="test", dash_config=dash_config )
+tooltip = "Carte du Monde décrivant l'évolution nombre de cas (morts) liés au Covid-19."
+card1 = du.Card(Id="map_plot", zoom=False, tooltip=tooltip, dash_config=dash_config )
 card1.format(row_number=1, width=6)
 
 # total cases
-card2 = du.Card(Id="total_case_plot", title="Pays les plus touchés", zoom=False, tooltip="test")
+tooltip = """L'évolution du nombre de cas (morts) en fonction du temps
+"""
+card2 = du.Card(Id="total_case_plot", title="Evolution du virus", zoom=False, tooltip=tooltip)
 card2.format(row_number=1, width=6)
 
 # top 10
-card3 = du.Card(Id="top10", title="Pays les plus touchés", zoom=False, tooltip="test")
+tooltip = """Classement des pays les plus touchés par l'épidémie, en de nombre de cas (morts)"""
+card3 = du.Card(Id="top10", title="Pays les plus touchés", zoom=False, tooltip=tooltip)
 card3.format(row_number=2, width=6)
 
 # daily cases
-card4 = du.Card(Id="new_cases", title="Taux de nouveau morts", zoom=False, tooltip="test")
+tooltip = "Nombre de nouveaux cas (morts) par semaine. L'affichage des valeurs est normalisées lorsque l'on compare différents pays entre eux"
+card4 = du.Card(Id="new_cases", title="Activité du virus", zoom=False, tooltip=tooltip)
 card4.format(row_number=2, width=6)
 
 cards = [card1, card2,
@@ -235,10 +248,14 @@ def global_update(slider_date, tabs_type, country_dropdown):
 
     # color and french legend
     if tabs_type == 'Death':
+        other = "Confirmed"
         marker_color = red
+        other_color = blue
         type_value = 'morts'
     else:
+        other = "Death"
         marker_color = blue
+        other_color = red
         type_value = 'cas'
     colorized_elm = html.Span(children='COVID-19', style={'color': marker_color})
 
@@ -271,6 +288,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
     # key values
     cases_counter = filtred_df['Confirmed'].sum()
     death_counter = filtred_df['Death'].sum()
+ 
     
     # 2. MAP
     # --------------------------------------------------------
@@ -280,7 +298,8 @@ def global_update(slider_date, tabs_type, country_dropdown):
     # hiligh select country 
     if country_dropdown:
         df_map["color"] = np.array([grey]* len(df_map)) 
-        df_map.loc[df_map["State"].isin(country_dropdown), "color"] = marker_color
+        df_map.loc[df_map["State"].isin(country_dropdown), "color"] = colors[:len(country_dropdown)]
+        print(df_map.loc[df_map["State"].isin(country_dropdown), "color"])
 
     # set the marker size
     bubble_size = df_map.set_index('State')[tabs_type]
@@ -299,18 +318,17 @@ def global_update(slider_date, tabs_type, country_dropdown):
                 sizemin = 2, 
                 sizeref = 2. * max(bubble_size) / (40.**2),
             ),
-            hovertemplate='<b>%{text}</b><br><br>' + '%{customdata[0]:.3s} cas<br>' + '%{customdata[1]:.3s} morts<extra></extra>'
+            hovertemplate='%{customdata[0]:.3s} cas<br>' + '%{customdata[1]:.3s} morts<extra> %{text}</extra>'
         )
     )
 
     # figure design
     map_plot.update_layout(
-        hoverlabel = dict( bgcolor = "white", font_size = 12), 
+        # hoverlabel = dict( bgcolor = "white", font_size = 12), 
         margin = margin,
-        # uirevision = 2,
         mapbox = dict(
-            zoom = 0, 
-            style = 'mapbox://styles/axelitorosalito/ckdyhbsb93rp719mwude0ze6j',
+            zoom = 0.5, 
+            style = 'mapbox://styles/axelitorosalito/ckb2erv2q148d1jnp7959xpz0',  #mapbox://styles/axelitorosalito/ckdyhbsb93rp719mwude0ze6j
             # center = go.layout.mapbox.Center(lat = 30, lon = 0),
             accesstoken = mapbox_access_token
         ), 
@@ -323,15 +341,14 @@ def global_update(slider_date, tabs_type, country_dropdown):
     if country_dropdown:
         filtred_df = filtred_df[filtred_df["State"].isin(country_dropdown)]
         slice_df = slice_df[slice_df["State"].isin(country_dropdown)]
-        country_order = slice_df.groupby('State').sum().sort_values(by=tabs_type).index
+        country_order = filtred_df.groupby('State').sum().sort_values(by=tabs_type).index
 
-
+    print(other)
     # 3. Top 10
     # --------------------------------------------------------
     top10 = filtred_df.groupby(['State', 'Date']).sum().reset_index()
     if country_dropdown:
         top10 = top10.nlargest(len(country_dropdown), tabs_type)
-        top10.sort_values(tabs_type, inplace=True)
         top10.set_index('State',inplace=True)
         # plot
         top10_plot = go.Figure()
@@ -339,24 +356,40 @@ def global_update(slider_date, tabs_type, country_dropdown):
             top10_plot.add_traces(go.Bar(
                 x=[top10.loc[c,tabs_type]],
                 y=[c], 
-                customdata=np.dstack((top10.loc[c,'Confirmed'],top10.loc[c,'Death']))[0],
-                hovertemplate='%{customdata[0]:.3s} cas<br>' +
-                '%{customdata[1]:.3s} morts <extra></extra>'))
+                hovertemplate='%{x:.3s} ' + type_value + '<extra></extra>'))
+
     else:
         top10 = top10.nlargest(10, tabs_type)
         top10.sort_values(tabs_type, inplace=True)
+
+        keep_top_3 = [None] * len(top10)
+        keep_top_3[-3:] =  top10[tabs_type][-3:]
+        keep_top_3 = [millify(x) for x in keep_top_3]
         # plot
-        top10_plot = go.Figure(go.Bar(
-            x=top10[tabs_type],
-            y=top10['State'],
-            customdata=np.dstack((top10['Confirmed'],top10['Death']))[0],
-            hovertemplate='%{customdata[0]:.3s} cas<br>' +
-            '%{customdata[1]:.3s} morts <extra></extra>',
-            marker_color=marker_color))
-    top10_plot.update_layout(hovermode="y unified", showlegend=False, margin= dict(l=10, r=100, t=10, b=10))
-    top10_plot.update_traces(texttemplate='%{customdata[0]:.3s}', textposition='outside', orientation='h')
-    top10_plot.update_xaxes(showgrid=False, showticklabels=False)
-    top10_plot.update_yaxes(linewidth=0.5, linecolor='black')
+        top10_plot = go.Figure([
+            go.Bar(
+                x=top10[tabs_type],
+                y=top10['State'],
+                text = keep_top_3,
+                hovertemplate='%{x:.3s} ' + type_value + '<extra></extra>',
+                marker_color=marker_color),
+            
+            ])
+
+        if tabs_type == "Confirmed":
+            top10_plot.add_traces(
+                go.Bar(
+                    x=top10[other],
+                    y=top10['State'],
+                    hoverinfo="skip",
+                    marker_color = red))
+
+    top10_plot.update_layout(hovermode="y", showlegend=False, barmode="overlay", margin=dict(l=50, r=20, t=20, b=20,pad=10))
+    top10_plot.update_traces(textposition='auto', orientation='h')
+    # top10_plot.update_xaxes(side="top", title= dict(text="Nombre de morts", font=dict(color="#8E8F90", size=13), standoff=0) ,showgrid=False, showticklabels=False, zeroline=False, showline=False)
+    top10_plot.update_xaxes(showgrid=False, showticklabels=False, zeroline=False, showline=False)
+    top10_plot.update_yaxes(showgrid=False, showline=False)
+    
 
     # 4. Cases over time
     # --------------------------------------------------------
@@ -369,6 +402,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
                 go.Scatter(
                     x = global_increase.loc[[c],'Date'].map(lambda x: format_date(x,'%d %b %y')),
                     y = global_increase.loc[[c], tabs_type],
+                    hovertemplate = '%{y:.2s} ' + type_value,
                     name = c
                 )
             )
@@ -380,15 +414,18 @@ def global_update(slider_date, tabs_type, country_dropdown):
             go.Scatter(
                 x = global_increase['Date'].map(lambda x: format_date(x,'%d %b %y')),
                 y = global_increase[tabs_type],
-                customdata = global_increase[tabs_type],
-                hovertemplate = '%{customdata:.3s}<extra></extra>',
-                marker_color = marker_color
+                hovertemplate = '%{y:.2s} ' + type_value,
+                marker_color = marker_color,
+                name = "Monde",
+
             )
         )
     # figure design
     total_case.update_yaxes(showline=True, nticks=5)
     total_case.update_xaxes(showline=False, nticks=5, showgrid=True)
-    total_case.update_layout(hovermode="x unified", margin=margin, showlegend=False)
+    total_case.update_layout(hovermode="x", margin=margin, showlegend=False)
+
+
 
     # 5. Daily Cases
     # --------------------------------------------------------
@@ -403,21 +440,27 @@ def global_update(slider_date, tabs_type, country_dropdown):
     daily_cases['Date'] = pd.to_datetime(daily_cases['Date'])
     daily_cases.set_index('Date', inplace=True)
 
+
     # filtering by country
+    from sklearn.preprocessing import MinMaxScaler
     if country_dropdown:
         new_cases_plot = go.Figure()
+
         for c in country_order:
             country_daily_cases = daily_cases[daily_cases['State'] == c]
             country_daily_cases = country_daily_cases.resample('7D').sum() # resample in a weekly base
-            evolution = country_daily_cases[new_type].map(lambda x: x / (country_daily_cases[new_type].sum() + 1e-5)) # 1e-5 --> prevent deviding by 0
+            country_daily_cases = country_daily_cases[:-1]
+            
+            # Normalise
+            country_daily_cases["scaled"] = MinMaxScaler().fit_transform(country_daily_cases[new_type].values.reshape(-1,1))
 
             new_cases_plot.add_traces(
                 go.Scatter(
-                    x = evolution.index,
-                    y = evolution,
+                    x = country_daily_cases.index,
+                    y = country_daily_cases["scaled"],
                     name = c,
                     customdata = country_daily_cases[new_type],
-                    hoverinfo='skip',
+                    hovertemplate="%{customdata:.2s} " + type_value,
                     fill = 'tozeroy',
                     line_shape = 'spline'
                 )
@@ -427,13 +470,14 @@ def global_update(slider_date, tabs_type, country_dropdown):
     else:
         daily_cases = daily_cases.groupby('Date').sum()
         daily_cases = daily_cases.resample('7D').sum()
-
+        daily_cases = daily_cases[:-1]
         new_cases_plot = go.Figure(
             go.Scatter(
                 x = daily_cases.index,
                 y = daily_cases[new_type],
-                hoverinfo='skip',
+                hovertemplate = "%{y:.2s} " + type_value ,
                 marker_color = marker_color,
+                name = "Monde",
                 fill = 'tozeroy',
                 line_shape = 'spline',
             )
@@ -441,7 +485,7 @@ def global_update(slider_date, tabs_type, country_dropdown):
     # figure design
     new_cases_plot.update_yaxes(showgrid=False, nticks=5, showticklabels=False, )
     new_cases_plot.update_xaxes(showline=True, nticks=5, showgrid=True, zeroline=False)
-    new_cases_plot.update_layout(hovermode="x unified", showlegend=False, margin=margin)
+    new_cases_plot.update_layout(hovermode="x", showlegend=False, margin=margin)
 
     # 6. Output
     # --------------------------------------------------------

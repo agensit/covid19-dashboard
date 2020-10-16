@@ -75,7 +75,7 @@ class Card:
                 id=f"tooltip-target-{self.graph.id}", 
                 style={"border-color":"grey"}, outline=True,
                 ),
-            dbc.Tooltip(tooltip, target=f"tooltip-target-{self.graph.id}", placement="left")
+            dbc.Tooltip(tooltip, target=f"tooltip-target-{self.graph.id}", placement="left", style={"background-color":"grey"})
         ]
 
     def add_info(self):
